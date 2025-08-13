@@ -2,6 +2,7 @@ import React from 'react';
 import { videoSrc } from '../assets/images';
 import EmployerServices from '../components/EmployerServices';
 import JobSeekerServices from '../components/JobSeekerServices';
+import HiringInfoSection from '../components/HiringInfoSection';
 import Footer from '../components/Footer';
 import {Link} from "react-router-dom";
 
@@ -122,6 +123,10 @@ const Employers: React.FC = () => {
             FIND OUT MORE
           </button>
         </div>
+
+        {/* Hiring Information Section */}
+        <HiringInfoSection />
+
         {/* Employer Services Section */}
         <EmployerServices />
         {/* Job Seeker Services Section */}

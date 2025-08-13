@@ -77,7 +77,7 @@ export const generateAutoResponderEmail = (jobTitle: string, applicantName: stri
         
         <p style="margin-top: 30px;">
           <strong>PATHMATCH Recruitment Team</strong><br>
-          <a href="mailto:info@pathmatch.com" style="color: #dc2626;">info@pathmatch.com</a>
+          <a href="mailto:info.pathmatch@gmail.com" style="color: #dc2626;">info.pathmatch@gmail.com</a>
         </p>
       </div>
     `,
@@ -103,7 +103,7 @@ We're excited about the possibility of working with you as a ${jobTitle}. Before
 We look forward to building a productive and professional partnership.
 
 PATHMATCH Recruitment Team
-info@pathmatch.com
+info.pathmatch@gmail.com
     `
   };
 };
@@ -118,7 +118,7 @@ export const sendAutoResponderEmail = async (
     const emailContent = generateAutoResponderEmail(jobTitle, applicantName, applicantEmail);
     
     const mailOptions = {
-      from: process.env.EMAIL_USER || 'info@pathmatch.com',
+      from: process.env.EMAIL_USER || 'info.pathmatch@gmail.com',
       to: applicantEmail,
       subject: emailContent.subject,
       html: emailContent.html,
@@ -144,8 +144,8 @@ export const sendNotificationEmail = async (
 ) => {
   try {
     const mailOptions: any = {
-      from: process.env.EMAIL_USER || 'info@pathmatch.com',
-      to: 'info@pathmatch.com',
+      from: process.env.EMAIL_USER || 'info.pathmatch@gmail.com',
+      to: 'info.pathmatch@gmail.com',
       subject: `New Job Application: ${jobTitle} - ${applicantName}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

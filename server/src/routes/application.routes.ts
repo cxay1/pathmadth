@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import multer from 'multer';
+import express from 'express';
 import { 
   submitApplication, 
   updateApplicationStatus,
@@ -9,9 +9,9 @@ import { authenticate, requireJobSeeker, requireEmployerOrAdmin } from '../middl
 
 const router = Router();
 
-// Configure multer for file uploads
-const upload = multer({
-  storage: multer.memoryStorage(),
+// Configure express.multer for file uploads
+const upload = express.multer({
+  storage: express.multer.memoryStorage(),
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },

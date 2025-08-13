@@ -52,11 +52,11 @@ npm run dev
 
 ## Dependencies
 
-- express
+- express (with built-in multer support)
 - mongoose
 - jsonwebtoken
 - bcryptjs
-- multer
+- nodemailer
 - aws-sdk
 - cors
 - dotenv 

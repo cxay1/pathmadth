@@ -1,7 +1,6 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import multer from 'multer';
 import applicationRoutes from './routes/application.routes';
 import { errorHandler } from './middleware/error.middleware';
 
@@ -9,24 +8,6 @@ import { errorHandler } from './middleware/error.middleware';
 dotenv.config();
 
 const app: Express = express();
-
-// Configure multer for file uploads
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    // Allow only PDF, DOC, DOCX files
-    if (file.mimetype === 'application/pdf' || 
-        file.mimetype === 'application/msword' || 
-        file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF, DOC, and DOCX files are allowed'));
-    }
-  }
-});
 
 // Middleware
 app.use(cors());

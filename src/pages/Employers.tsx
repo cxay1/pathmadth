@@ -35,14 +35,16 @@ const Employers: React.FC = () => {
         </div>
 
         {/* Video Section */}
-        <div className="flex justify-center items-center w-full bg-black py-8 mb-10">
-          <video
-            src={videoSrc}
-            controls
-            className="mx-auto rounded-lg shadow-lg w-full max-w-3xl bg-black"
-            poster=""
-            aria-label="PathMatch Introduction Video"
-          />
+        <div className="w-full bg-black py-8 mb-10 rounded-lg">
+          <div className="relative w-full aspect-video max-w-6xl mx-auto px-4">
+            <video
+              src={videoSrc}
+              controls
+              className="absolute inset-0 w-full h-full rounded-lg shadow-2xl object-cover"
+              poster=""
+              aria-label="PathMatch Introduction Video"
+            />
+          </div>
         </div>
 
         {/* Why Partner Section */}
@@ -97,23 +99,103 @@ const Employers: React.FC = () => {
         </div>
 
         {/* Get Started Section */}
-        <h2 className="text-2xl font-bold text-black mb-4">Get Started</h2>
-        <ul className="list-disc list-inside text-gray-700 mb-10 space-y-2">
-          <li>
-            <span className="font-semibold">Submit a Job Opening:</span> Fill out our easy-to-use form to post your job vacancies directly on our platform. <Link to="/job-seekers" className="text-blue-600 underline hover:text-blue-800">Job Submission Form</Link>
-          </li>
-          <li>
-            <span className="font-semibold">Contact Us for a Personalized Consultation:</span> Our team is here to discuss your hiring needs and explore how we can assist you in achieving your talent acquisition goals. <Link to="#contact" className="text-blue-600 underline hover:text-blue-800">Contact Us</Link>
-          </li>
-          <li>
-            <span className="font-semibold">Explore Our Success Stories:</span> Learn how we’ve helped other companies build strong teams and meet their HR challenges. <Link to="#success-stories" className="text-blue-600 underline hover:text-blue-800">Success Stories</Link>
-          </li>
-        </ul>
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-8 md:p-12 shadow-xl border border-gray-200 mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-red-600 text-center mb-8">
+            Get Started Today
+          </h2>
+          <p className="text-lg text-gray-600 text-center mb-10 max-w-3xl mx-auto">
+            Ready to transform your hiring process? Choose the option that best fits your needs and let's build your dream team together.
+          </p>
+          
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            {/* Submit Job Opening Card */}
+            <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-red-300 group">
+              <div className="flex items-center mb-4">
+                <div className="bg-red-100 p-3 rounded-full mr-4 group-hover:bg-red-200 transition-colors">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800">Submit a Job Opening</h3>
+              </div>
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                Fill out our easy-to-use form to post your job vacancies directly on our platform and reach qualified candidates instantly.
+              </p>
+              <Link 
+                to="/job-seekers" 
+                className="inline-flex items-center bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 group"
+              >
+                Job Submission Form
+                <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </Link>
+            </div>
 
-        <div className="flex justify-center mt-8">
+            {/* Consultation Card */}
+            <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-red-300 group">
+              <div className="flex items-center mb-4">
+                <div className="bg-red-100 p-3 rounded-full mr-4 group-hover:bg-red-200 transition-colors">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800">Personalized Consultation</h3>
+              </div>
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                Our team is here to discuss your hiring needs and explore how we can assist you in achieving your talent acquisition goals.
+              </p>
+              <Link 
+                to="#contact" 
+                className="inline-flex items-center bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 group"
+              >
+                Contact Us
+                <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </Link>
+            </div>
+
+            {/* Success Stories Card */}
+            <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-red-300 group">
+              <div className="flex items-center mb-4">
+                <div className="bg-red-100 p-3 rounded-full mr-4 group-hover:bg-red-200 transition-colors">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800">Success Stories</h3>
+              </div>
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                Learn how we've helped other companies build strong teams and meet their HR challenges with proven results.
+              </p>
+              <Link 
+                to="#success-stories" 
+                className="inline-flex items-center bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 group"
+              >
+                Success Stories
+                <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </Link>
+            </div>
+          </div>
+
+          {/* Call to Action */}
+          <div className="text-center">
+            <p className="text-red-600 font-semibold text-lg mb-4">
+              🚀 Ready to revolutionize your hiring process?
+            </p>
+            <p className="text-gray-600 text-sm">
+              Join hundreds of companies that trust PathMatch for their recruitment needs
+            </p>
+          </div>
+        </div>
+
+        <div className="flex justify-center mt-8 mb-12">
           <button
             type="button"
-            className="bg-black text-white font-semibold px-10 py-3 rounded shadow hover:bg-gray-200 hover:text-black transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="bg-red-600 text-white font-bold px-12 py-4 rounded-lg shadow-lg hover:bg-red-700 hover:shadow-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transform hover:scale-105"
             onClick={() => {
               const form = document.getElementById('employer-form-section');
               if (form) form.scrollIntoView({ behavior: 'smooth' });

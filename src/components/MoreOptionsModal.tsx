@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../features/auth/context/AuthContext';
 
 interface MobileMenuModalProps {
   isOpen: boolean;
@@ -9,11 +10,23 @@ interface MobileMenuModalProps {
 }
 
 const MobileMenuModal: React.FC<MobileMenuModalProps> = ({ isOpen, onClose, currentPath }) => {
+  const { isAuthenticated, user, logout } = useAuth();
+  
   const isActiveLink = (href: string) => {
     if (href === '/') {
       return currentPath === '/';
     }
     return currentPath.startsWith(href);
+  };
+
+  const getUserInitials = () => {
+    if (!user?.firstName || !user?.lastName) return '';
+    return `${user.firstName.charAt(0).toUpperCase()}${user.lastName.charAt(0).toUpperCase()}`;
+  };
+
+  const handleLogout = () => {
+    logout();
+    onClose();
   };
 
   return (
@@ -71,6 +84,23 @@ const MobileMenuModal: React.FC<MobileMenuModalProps> = ({ isOpen, onClose, curr
                   </svg>
                 </button>
               </div>
+
+              {/* User Authentication Section */}
+              {isAuthenticated && (
+                <div className="p-6 border-b border-gray-800 bg-gray-900">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                      {getUserInitials()}
+                    </div>
+                    <div>
+                      <h3 className="text-white font-semibold text-lg">
+                        {user?.firstName} {user?.lastName}
+                      </h3>
+                      <p className="text-gray-400 text-sm">{user?.email}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Main Content */}
               <div className="p-6 space-y-8">
@@ -135,15 +165,24 @@ const MobileMenuModal: React.FC<MobileMenuModalProps> = ({ isOpen, onClose, curr
                       >
                         Apply for a Job
                       </Link>
+                      {!isAuthenticated ? (
+                        <Link
+                          to="/auth"
+                          className="block text-white hover:text-gray-300 transition-colors"
+                          onClick={onClose}
+                        >
+                          Sign In / Sign Up
+                        </Link>
+                      ) : (
+                        <button
+                          onClick={handleLogout}
+                          className="block text-left text-white hover:text-gray-300 transition-colors"
+                        >
+                          Logout
+                        </button>
+                      )}
                       <Link
-                        to="/auth"
-                        className="block text-white hover:text-gray-300 transition-colors"
-                        onClick={onClose}
-                      >
-                        New Here?
-                      </Link>
-                      <Link
-                        to="/contact"
+                        to="/contact-us"
                         className="block text-white hover:text-gray-300 transition-colors"
                         onClick={onClose}
                       >

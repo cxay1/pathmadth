@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { navLinks } from "../navLinks";
 import MobileMenuModal from "./MoreOptionsModal";
+import { useAuth } from "../features/auth/context/AuthContext";
 
 interface NavLink {
   label: string;
@@ -11,6 +12,13 @@ interface NavLink {
 const AnimatedLogo: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { isAuthenticated, user, logout } = useAuth();
+
+  // Function to get user initials
+  const getUserInitials = () => {
+    if (!user?.firstName || !user?.lastName) return '';
+    return `${user.firstName.charAt(0).toUpperCase()}${user.lastName.charAt(0).toUpperCase()}`;
+  };
 
   // Handle Escape key & body scroll lock
   useEffect(() => {
@@ -76,6 +84,34 @@ const AnimatedLogo: React.FC = () => {
                   {link.label}
                 </Link>
               ))}
+              
+              {/* User Authentication Section */}
+              {isAuthenticated ? (
+                <div className="flex items-center space-x-4">
+                  {/* User Initials */}
+                  <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {getUserInitials()}
+                  </div>
+                  {/* User Name */}
+                  <span className="text-gray-700 font-medium">
+                    {user?.firstName} {user?.lastName}
+                  </span>
+                  {/* Logout Button */}
+                  <button
+                    onClick={logout}
+                    className="text-gray-500 hover:text-red-600 font-medium text-base transition-colors duration-200"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  to="/auth"
+                  className="bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200"
+                >
+                  Sign In
+                </Link>
+              )}
             </nav>
 
             {/* Mobile Menu Button */}
@@ -105,11 +141,13 @@ const AnimatedLogo: React.FC = () => {
       </header>
 
       {/* Mobile Menu Modal - moved outside header and increased z-index */}
-      <MobileMenuModal
-        isOpen={isMenuOpen}
-        onClose={() => setIsMenuOpen(false)}
-        currentPath={location.pathname}
-      />
+      {isMenuOpen && (
+        <MobileMenuModal
+          isOpen={isMenuOpen}
+          onClose={() => setIsMenuOpen(false)}
+          currentPath={location.pathname}
+        />
+      )}
     </>
   );
 };

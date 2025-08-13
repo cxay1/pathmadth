@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../features/auth/context/AuthContext';
 
 const Auth: React.FC = () => {
   const [tab, setTab] = useState<'login' | 'register'>('login');
@@ -12,16 +14,80 @@ const Auth: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    if (error) setError(''); // Clear error when user types
   };
 
-  const handleTab = (tab: 'login' | 'register') => setTab(tab);
+  const handleTab = (tab: 'login' | 'register') => {
+    setTab(tab);
+    setError(''); // Clear error when switching tabs
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // handle login/register logic
+    setIsLoading(true);
+    setError('');
+
+    try {
+      if (tab === 'register') {
+        // Validation for registration
+        if (form.password !== form.confirmPassword) {
+          setError('Passwords do not match');
+          setIsLoading(false);
+          return;
+        }
+        if (form.password.length < 6) {
+          setError('Password must be at least 6 characters long');
+          setIsLoading(false);
+          return;
+        }
+        if (!form.firstName.trim() || !form.lastName.trim()) {
+          setError('First name and last name are required');
+          setIsLoading(false);
+          return;
+        }
+
+        // For demo purposes, create a mock token with user data
+        const mockToken = btoa(JSON.stringify({
+          userId: Date.now().toString(),
+          email: form.email,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          role: role.toLowerCase().replace(' ', '_'),
+          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours from now
+          iat: Math.floor(Date.now() / 1000)
+        }));
+
+        login(mockToken);
+        navigate('/');
+      } else {
+        // For demo purposes, create a mock login
+        // In a real app, you'd make an API call here
+        const mockToken = btoa(JSON.stringify({
+          userId: '12345',
+          email: form.email,
+          firstName: 'John', // Mock data for demo
+          lastName: 'Doe',
+          role: 'job_seeker',
+          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
+          iat: Math.floor(Date.now() / 1000)
+        }));
+
+        login(mockToken);
+        navigate('/');
+      }
+    } catch (error) {
+      setError('Authentication failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -56,6 +122,14 @@ const Auth: React.FC = () => {
             Sign Up
           </button>
         </div>
+        
+        {/* Error Message */}
+        {error && (
+          <div className="w-full mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600 text-sm text-center">{error}</p>
+          </div>
+        )}
+        
         {/* Form */}
         <form className="w-full" onSubmit={handleSubmit} autoComplete="off">
           {tab === 'register' && (
@@ -161,9 +235,24 @@ const Auth: React.FC = () => {
           )}
           <button
             type="submit"
-            className={`w-full py-3 rounded-lg font-semibold text-white mt-2 transition-colors ${tab === 'login' ? 'bg-red-600 hover:bg-red-700' : 'bg-red-600 hover:bg-red-700'}`}
+            disabled={isLoading}
+            className={`w-full py-3 rounded-lg font-semibold text-white mt-2 transition-colors ${
+              isLoading 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-red-600 hover:bg-red-700'
+            }`}
           >
-            {tab === 'login' ? 'Sign In' : 'Create Account'}
+            {isLoading ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {tab === 'login' ? 'Signing In...' : 'Creating Account...'}
+              </span>
+            ) : (
+              tab === 'login' ? 'Sign In' : 'Create Account'
+            )}
           </button>
         </form>
         {tab === 'login' && (

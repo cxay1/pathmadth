@@ -1,202 +1,278 @@
 import React, { useState } from 'react';
-import { hire1, hire2, hire3 } from '../assets/images';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../features/auth/context/AuthContext';
 
-interface HiringInfoItem {
-  title: string;
-  description: string;
-  image: string;
-}
+const Auth: React.FC = () => {
+  const [tab, setTab] = useState<'login' | 'register'>('login');
+  const [role, setRole] = useState('Job Seeker');
+  const [form, setForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-interface TabSection {
-  id: string;
-  label: string;
-  title: string;
-  items: HiringInfoItem[];
-}
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
-const HiringInfoSection: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('attract-talent');
-  const [activeAccordion, setActiveAccordion] = useState<number | null>(null);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    if (error) setError(''); // Clear error when user types
+  };
 
-  const tabSections: TabSection[] = [
-    {
-      id: 'attract-talent',
-      label: 'Help me attract talent',
-      title: 'Attract Top Talent to Your Organization',
-      items: [
-        {
-          title: "Write a standout job description",
-          description: "Posting a job on PathMatch is simple. With the help of job description templates and the addition of screener questions, your posts can appeal to more quality candidates so you're connecting with those who meet your most important job criteria.",
-          image: hire1
-        },
-        {
-          title: "Boost visibility for your roles",
-          description: "If you want a larger number of applicants, sponsor your job to give it better visibility. As thousands of jobs are added to PathMatch each day, free job postings lose visibility over time. Sponsoring your job by adding a daily or monthly budget ensures it appears more often and for longer in search results.",
-          image: hire2
-        },
-        {
-          title: "Showcase your company",
-          description: "Positive employer branding helps businesses attract, engage, and hire the right employees. It can also help you fill positions faster, more effectively, and set you apart from your competitors. We can help you get started by putting your jobs and employee experience in front of the right potential candidates.",
-          image: hire3
+  const handleTab = (tab: 'login' | 'register') => {
+    setTab(tab);
+    setError(''); // Clear error when switching tabs
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    try {
+      if (tab === 'register') {
+        // Validation for registration
+        if (form.password !== form.confirmPassword) {
+          setError('Passwords do not match');
+          setIsLoading(false);
+          return;
         }
-      ]
-    },
-    {
-      id: 'connect-candidates',
-      label: 'Help me connect with candidates',
-      title: 'Make Meaningful Connections on One Platform',
-      items: [
-        {
-          title: "Surface the right people",
-          description: "A Smart Sourcing subscription helps you connect with matched candidates from a talent pool of millions of active job seekers, not those just looking to network.",
-          image: hire1
-        },
-        {
-          title: "Evaluate with the screening tools",
-          description: "Pre-made screener questions can help you evaluate certain skills and filter out unqualified candidates so you're connecting with those who meet your most important job criteria.",
-          image: hire2
-        },
-        {
-          title: "Schedule and conduct interviews",
-          description: "Interviewing on PathMatch is unique because it's built specifically for candidate management. The same platform where you're posting your jobs, setting your criteria for hiring, and reviewing resumes is where you can engage in a conversation with a candidate. Since everything happens in one place, it's easier to keep track of where candidates are in the process.",
-          image: hire3
+        if (form.password.length < 6) {
+          setError('Password must be at least 6 characters long');
+          setIsLoading(false);
+          return;
         }
-      ]
-    },
-    {
-      id: 'streamline-process',
-      label: 'Help me streamline the process',
-      title: 'Spend More Time on What Matters Most',
-      items: [
-        {
-          title: "Integrate your ATS",
-          description: "Automate data transfer between your Applicant Tracking System (ATS) and PathMatch. ATS Sync seamlessly transfers job and candidate data between PathMatch and your ATS to make hiring faster and easier. Spend less time going back and forth between systems and more time hiring.",
-          image: hire1
-        },
-        {
-          title: "Optimize your recruiting performance",
-          description: "Gain an in-depth understanding of your local market and the roles you're hiring for with PathMatch Hiring Insights. These easy-to-use reports provide data-driven insight into local job market conditions to help you create job descriptions and other content designed to get results.",
-          image: hire2
-        },
-        {
-          title: "Host a hiring event",
-          description: "In-person and virtual hiring events are like a personal job fair for your company with dedicated days for interviewing. PathMatch Hiring Events are our all-in-one hiring event solution with built-in talent attraction and recruitment automation.",
-          image: hire3
+        if (!form.firstName.trim() || !form.lastName.trim()) {
+          setError('First name and last name are required');
+          setIsLoading(false);
+          return;
         }
-      ]
+
+        // For demo purposes, create a mock token with user data
+        const mockToken = btoa(JSON.stringify({
+          userId: Date.now().toString(),
+          email: form.email,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          role: role.toLowerCase().replace(' ', '_'),
+          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours from now
+          iat: Math.floor(Date.now() / 1000)
+        }));
+
+        login(mockToken);
+        navigate('/');
+      } else {
+        // For demo purposes, create a mock login
+        // In a real app, you'd make an API call here
+        const mockToken = btoa(JSON.stringify({
+          userId: '12345',
+          email: form.email,
+          firstName: 'John', // Mock data for demo
+          lastName: 'Doe',
+          role: 'job_seeker',
+          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
+          iat: Math.floor(Date.now() / 1000)
+        }));
+
+        login(mockToken);
+        navigate('/');
+      }
+    } catch (error) {
+      setError('Authentication failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
-  ];
-
-  const handleTabClick = (tabId: string) => {
-    setActiveTab(tabId);
-    setActiveAccordion(null); // Reset accordion when switching tabs
   };
-
-  const toggleAccordion = (index: number) => {
-    setActiveAccordion(activeAccordion === index ? null : index);
-  };
-
-  const activeSection = tabSections.find(section => section.id === activeTab);
 
   return (
-    <div className="w-full max-w-6xl mx-auto py-12">
-      <div className="mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-8">
-          Everything you need for end-to-end hiring
-        </h2>
-        
-        {/* Tab Navigation */}
-        <div className="flex flex-wrap justify-center gap-2 md:gap-4 mb-8 px-4">
-          {tabSections.map((section) => (
-            <button
-              key={section.id}
-              onClick={() => handleTabClick(section.id)}
-              className={`px-4 py-3 text-sm md:text-base font-medium rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 ${
-                activeTab === section.id
-                  ? 'bg-red-600 text-white shadow-lg border-1 border-red-600'
-                  : 'bg-white text-gray-600 border-2 border-gray-200 hover:border-red-300 hover:text-red-700 hover:bg-red-50'
-              }`}
-            >
-              {section.label}
-            </button>
-          ))}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-100 via-red-200 to-yellow-100">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl mx-auto p-8 md:p-10 flex flex-col items-center">
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-6">
+          <div className="bg-red-600 rounded-xl p-3 mb-3 flex items-center justify-center shadow-md">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-1 tracking-tight">Welcome to PATHMATCH</h1>
+          <p className="text-gray-500 text-sm">Sign in to your account or create a new one</p>
         </div>
-
-        {/* Active Section Title */}
-        {activeSection && (
-          <div className="text-center mb-8">
-            <h3 className="text-xl md:text-2xl font-semibold text-gray-800 mb-2">
-              {activeSection.title}
-            </h3>
-            <div className="w-24 h-1 bg-red-600 mx-auto rounded-full"></div>
+        {/* Tab Switcher */}
+        <div className="flex w-full mb-8 rounded-lg overflow-hidden border border-gray-200">
+          <button
+            className={`flex-1 py-2 text-center text-base font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-red-300 ${tab === 'login' ? 'bg-red-100 text-red-700 shadow-inner' : 'bg-white text-gray-500'}`}
+            onClick={() => handleTab('login')}
+            tabIndex={0}
+            aria-selected={tab === 'login'}
+          >
+            Sign In
+          </button>
+          <button
+            className={`flex-1 py-2 text-center text-base font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-red-300 ${tab === 'register' ? 'bg-red-100 text-red-700 shadow-inner' : 'bg-white text-gray-500'}`}
+            onClick={() => handleTab('register')}
+            tabIndex={0}
+            aria-selected={tab === 'register'}
+          >
+            Sign Up
+          </button>
+        </div>
+        
+        {/* Error Message */}
+        {error && (
+          <div className="w-full mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600 text-sm text-center">{error}</p>
           </div>
         )}
-      </div>
-
-      {/* Tab Content */}
-      {activeSection && (
-        <div className="space-y-4">
-          {activeSection.items.map((item, index) => (
-            <div key={index} className="border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 bg-white">
-              {/* Accordion Header */}
-              <button
-                onClick={() => toggleAccordion(index)}
-                className="w-full px-6 py-5 text-left hover:bg-gray-50 transition-colors duration-200 flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-inset group"
-                aria-expanded={activeAccordion === index}
-                aria-controls={`accordion-content-${index}`}
+        
+        {/* Form */}
+        <form className="w-full" onSubmit={handleSubmit} autoComplete="off">
+          {tab === 'register' && (
+            <>
+              <label className="block text-sm font-medium text-gray-700 mb-1">I am a</label>
+              <select
+                className="w-full mb-4 rounded-lg border border-gray-200 bg-gray-50 py-2 px-3 text-gray-700 focus:ring-2 focus:ring-red-200 focus:border-red-400"
+                value={role}
+                onChange={e => setRole(e.target.value)}
               >
-                <h4 className="text-lg md:text-xl font-semibold text-gray-900 group-hover:text-red-700 transition-colors duration-200">
-                  {item.title}
-                </h4>
-                <div className={`transform transition-transform duration-300 ${activeAccordion === index ? 'rotate-180' : ''}`}>
-                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+                <option>Job Seeker</option>
+                <option>Employer</option>
+              </select>
+              <div className="flex flex-col md:flex-row gap-3 mb-4">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    name="firstName"
+                    placeholder="First Name"
+                    value={form.firstName}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 px-3 text-gray-700 focus:ring-2 focus:ring-red-200 focus:border-red-400"
+                    autoComplete="given-name"
+                  />
                 </div>
-              </button>
-
-              {/* Accordion Content */}
-              <div
-                id={`accordion-content-${index}`}
-                className={`transition-all duration-300 ease-in-out ${
-                  activeAccordion === index 
-                    ? 'max-h-96 opacity-100' 
-                    : 'max-h-0 opacity-0 overflow-hidden'
-                }`}
-              >
-                <div className="px-6 py-6 bg-gradient-to-r from-gray-50 to-red-50 border-t border-gray-200">
-                  <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
-                    <div className="flex-1">
-                      <p className="text-gray-700 leading-relaxed text-base lg:text-lg">
-                        {item.description}
-                      </p>
-                    </div>
-                    <div className="flex-shrink-0">
-                      <div className="relative group">
-                        <img 
-                          src={item.image} 
-                          alt={item.title}
-                          className="w-56 h-36 object-cover rounded-xl shadow-lg border-2 border-white group-hover:shadow-xl transition-shadow duration-300"
-                        />
-                        <div className="absolute inset-0 bg-red-600 opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-xl"></div>
-                      </div>
-                    </div>
-                  </div>
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    name="lastName"
+                    placeholder="Last Name"
+                    value={form.lastName}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 px-3 text-gray-700 focus:ring-2 focus:ring-red-200 focus:border-red-400"
+                    autoComplete="family-name"
+                  />
                 </div>
               </div>
+            </>
+          )}
+          <div className="mb-4 relative">
+            <input
+              type="email"
+              name="email"
+              placeholder="your@email.com"
+              value={form.email}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 px-3 text-gray-700 focus:ring-2 focus:ring-red-200 focus:border-red-400"
+              autoComplete="email"
+              required
+            />
+          </div>
+          <div className="mb-4 relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 px-3 text-gray-700 focus:ring-2 focus:ring-red-200 focus:border-red-400"
+              autoComplete={tab === 'login' ? 'current-password' : 'new-password'}
+              required
+            />
+            <button
+              type="button"
+              tabIndex={-1}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-600"
+              onClick={() => setShowPassword(v => !v)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10 0-1.657.402-3.22 1.125-4.575M15 12a3 3 0 11-6 0 3 3 0 016 0zm6.364-6.364A9.956 9.956 0 0122 9c0 5.523-4.477 10-10 10a9.956 9.956 0 01-6.364-2.364" /><path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" /></svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z" /></svg>
+              )}
+            </button>
+          </div>
+          {tab === 'register' && (
+            <div className="mb-4 relative">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                name="confirmPassword"
+                placeholder="Confirm Password"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 py-2 px-3 text-gray-700 focus:ring-2 focus:ring-red-200 focus:border-red-400"
+                autoComplete="new-password"
+                required
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-600"
+                onClick={() => setShowConfirmPassword(v => !v)}
+                aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+              >
+                {showConfirmPassword ? (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10 0-1.657.402-3.22 1.125-4.575M15 12a3 3 0 11-6 0 3 3 0 016 0zm6.364-6.364A9.956 9.956 0 0122 9c0 5.523-4.477 10-10 10a9.956 9.956 0 01-6.364-2.364" /><path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" /></svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6 0c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z" /></svg>
+                )}
+              </button>
             </div>
-          ))}
+          )}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`w-full py-3 rounded-lg font-semibold text-white mt-2 transition-colors ${
+              isLoading 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-red-600 hover:bg-red-700'
+            }`}
+          >
+            {isLoading ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {tab === 'login' ? 'Signing In...' : 'Creating Account...'}
+              </span>
+            ) : (
+              tab === 'login' ? 'Sign In' : 'Create Account'
+            )}
+          </button>
+        </form>
+        {tab === 'login' && (
+          <div className="w-full text-center mt-4">
+            <Link to="#" className="text-sm text-red-600 hover:underline">Forgot your password?</Link>
+          </div>
+        )}
+        <div className="w-full flex items-center my-6">
+          <div className="flex-1 h-px bg-gray-200" />
+          <span className="mx-4 text-gray-400 text-xs">or</span>
+          <div className="flex-1 h-px bg-gray-200" />
         </div>
-      )}
-
-      {/* Call to Action */}
-      <div className="text-center mt-12">
-        <button className="bg-red-600 text-white px-10 py-4 rounded-xl font-semibold hover:bg-red-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-          Start connecting with candidates →
-        </button>
+        <div className="w-full text-center text-xs text-gray-500">
+          By signing up, you agree to our{' '}
+          <Link to="#" className="text-red-600 hover:underline">Terms of Service</Link> and{' '}
+          <Link to="#" className="text-red-600 hover:underline">Privacy Policy</Link>
+        </div>
       </div>
     </div>
   );
 };
 
-export default HiringInfoSection;
+export default Auth; 

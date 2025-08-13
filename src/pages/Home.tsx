@@ -61,13 +61,13 @@ const Home = () => {
           <div className="flex flex-col sm:flex-row gap-4 mb-12">
         <Link
           to="/job-seekers"
-              className="bg-red-400 hover:bg-red-500 text-white font-bold px-8 py-4 rounded-lg shadow transition-colors text-lg flex items-center justify-center"
+              className="bg-red-500  hover:bgt-red-600 text-white font-bold px-8 py-4 rounded-lg shadow transition-colors text-lg flex items-center justify-center"
             >
               Find Your Dream Job <span className="ml-2">→</span>
             </Link>
             <Link
               to="/auth"
-              className="bg-white bg-opacity-90 hover:bg-opacity-100 text-red-700 font-bold px-8 py-4 rounded-lg shadow transition-colors text-lg flex items-center justify-center"
+              className="bg-gray-100 bg-opacity-90 hover:bg-white text-red-700 font-bold px-8 py-4 rounded-lg shadow transition-colors text-lg flex items-center justify-center"
             >
               Hire Top Talent
         </Link>

@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Upload from './pages/Upload';
 import VideoPlayer from './components/VideoPlayer';
+import ScrollToTop from './components/ScrollToTop'
 import Chat from './pages/Chat';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
@@ -21,6 +22,7 @@ function App() {
     <>
       {location.pathname !== '/auth' && <AnimatedLogo />}
       <AuthProvider>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/job-seekers" element={<Jobseekers />} />

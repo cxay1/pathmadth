@@ -54,7 +54,7 @@ const FlipModal = ({ isOpen, onClose, children, jobTitle, companyName }) => (
 
           {/* Contact Information Footer */}
           <div className="border-t border-gray-200 pt-4 mt-4 text-center">
-            <p className="text-sm text-gray-600 mb-2">Need help with your application?</p>
+            <p className="text-sm text-gray-600 mb-2">Having trouble with your application?</p>
             <Link 
               to="mailto:info.pathmatch@gmail.com" 
               className="inline-flex items-center text-red-600 hover:text-red-800 font-medium transition-colors"
@@ -142,6 +142,7 @@ const JobSeekers: React.FC = () => {
   const [selectedJob, setSelectedJob] = useState<any | null>(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
 
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -171,6 +172,8 @@ const JobSeekers: React.FC = () => {
 
     setIsSubmitting(true);
 
+    setIsSubmitting(true);
+
     try {
       const formData = new FormData();
       formData.append('job_title', selectedJob.title);
@@ -194,6 +197,9 @@ const JobSeekers: React.FC = () => {
         // Show success message
         setShowSuccessMessage(true);
         
+        // Show success message
+        setShowSuccessMessage(true);
+        
         // Reset form
         setForm({
           name: '',
@@ -203,6 +209,13 @@ const JobSeekers: React.FC = () => {
           resume: null,
         });
         setAttachments([]);
+        
+        // Auto-hide success message and close modal after 3 seconds
+        setTimeout(() => {
+          setShowSuccessMessage(false);
+          setIsModalOpen(false);
+        }, 3000);
+        
         
         // Auto-hide success message and close modal after 3 seconds
         setTimeout(() => {
@@ -717,6 +730,35 @@ const JobSeekers: React.FC = () => {
                 If you're interested in one of our open positions, start by applying here and attaching your resume.
               </p>
               <form onSubmit={handleSubmit} className="bg-white rounded-lg p-0 md:p-0 flex flex-col gap-4">
+          {showSuccessMessage ? (
+            <div className="text-center py-8">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-4">
+                <div className="flex items-center justify-center mb-4">
+                  <svg className="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-green-800 mb-2">Application Submitted Successfully!</h3>
+                <p className="text-green-700 mb-4">
+                  Thank you for applying to <strong>{selectedJob?.title}</strong> at <strong>{selectedJob?.company}</strong>.
+                </p>
+                <p className="text-green-600 text-sm">
+                  We've sent a confirmation email to <strong>{form.email}</strong>. 
+                  Our team will review your application and get back to you soon.
+                </p>
+              </div>
+              <div className="text-sm text-gray-500">
+                This modal will close automatically in a few seconds...
+              </div>
+            </div>
+          ) : (
+            <>
+              <h1 className="text-4xl md:text-5xl font-bold text-red-800 text-center mb-8">WE ARE HIRING!</h1>
+              <h2 className="text-2xl md:text-2xl text-black text-center mb-10">Join Our Team</h2>
+              <p className="text-red-600 bg-neutral-100 rounded px-4 py-2 text-center mb-8">
+                If you're interested in one of our open positions, start by applying here and attaching your resume.
+              </p>
+              <form onSubmit={handleSubmit} className="bg-white rounded-lg p-0 md:p-0 flex flex-col gap-4">
             <input
               type="text"
               name="name"
@@ -766,6 +808,43 @@ const JobSeekers: React.FC = () => {
               </label>
               <span className="text-gray-500 text-sm">Attachments ({attachments.length})</span>
             </div>
+                <div className="mt-6 flex flex-col items-center">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className={`font-semibold px-8 py-3 rounded shadow transition-colors w-full max-w-xs ${
+                      isSubmitting 
+                        ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                        : 'bg-red-700 text-white hover:bg-red-800'
+                    }`}
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        SUBMITTING...
+                      </span>
+                    ) : (
+                      'SUBMIT APPLICATION'
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="mt-2 text-red-600 hover:underline"
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </button>
+                  <p className="text-xs text-zinc-600 text-center mt-4">
+                    This site is protected by reCAPTCHA and the Google <Link to ="https://policies.google.com/privacy" className="underline hover:text-red-600">Privacy Policy</Link> and <Link to ="https://policies.google.com/terms" className="underline hover:text-red-600">Terms of Service</Link> apply.
+                  </p>
+                </div>
+              </form>
+            </>
+          )}
                 <div className="mt-6 flex flex-col items-center">
                   <button
                     type="submit"

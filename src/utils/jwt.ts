@@ -5,7 +5,9 @@ const JWT_SECRET = import.meta.env.VITE_JWT_SECRET || '1adc19bd35ecb9b5ebaac1a2b
 export interface DecodedToken {
   userId: string;
   email: string;
-  role: 'user' | 'creator';
+  firstName?: string;
+  lastName?: string;
+  role: 'user' | 'creator' | 'job_seeker' | 'employer';
   exp: number;
   iat: number;
 }
@@ -13,9 +15,16 @@ export interface DecodedToken {
 
 export const decodeToken = (token: string): DecodedToken => {
   try {
+    // First try to decode as a standard JWT
     return jwtDecode<DecodedToken>(token);
   } catch (error) {
-    throw new Error('Invalid token');
+    // If that fails, try to decode as base64 (for mock tokens)
+    try {
+      const decoded = JSON.parse(atob(token));
+      return decoded as DecodedToken;
+    } catch (base64Error) {
+      throw new Error('Invalid token');
+    }
   }
 };
 

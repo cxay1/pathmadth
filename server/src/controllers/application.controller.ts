@@ -2,10 +2,10 @@ import { Request, Response } from 'express';
 import { supabase } from '../config/db';
 import { sendAutoResponderEmail, sendNotificationEmail } from '../services/email.service';
 
-export const submitPublicApplication = async (req: Request, res: Response) => {
+export const submitPublicApplication = async (req: Request, res: Response): Promise<void> => {
   try {
     const { job_title, applicant_name, applicant_email, cover_letter, phone } = req.body;
-    const resumeFile = req.file;
+    const resumeFile: Express.Multer.File | undefined = req.file;
 
     // Validate required fields
     if (!applicant_name || !applicant_email || !job_title) {
@@ -65,7 +65,7 @@ export const submitPublicApplication = async (req: Request, res: Response) => {
   }
 };
 
-export const submitApplication = async (req: Request, res: Response) => {
+export const submitApplication = async (req: Request, res: Response): Promise<void> => {
   try {
     const { job_id, cover_letter, applicant_name, applicant_email, job_title } = req.body;
     const jobSeekerId = req.user?.id;
@@ -122,7 +122,7 @@ export const submitApplication = async (req: Request, res: Response) => {
   }
 };
 
-export const updateApplicationStatus = async (req: Request, res: Response) => {
+export const updateApplicationStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     const { status } = req.body;

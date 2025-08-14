@@ -8,7 +8,7 @@ const asyncWrapper = (fn: Function) => {
   };
 };
 
-export const register = asyncWrapper(async (req: Request, res: Response) => {
+export const register = asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const { email, password, role, firstName, lastName } = req.body;
 
   // Validate required fields
@@ -76,7 +76,7 @@ export const register = asyncWrapper(async (req: Request, res: Response) => {
   }
 });
 
-export const login = asyncWrapper(async (req: Request, res: Response) => {
+export const login = asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body;
 
   // Validate required fields
@@ -121,7 +121,7 @@ export const login = asyncWrapper(async (req: Request, res: Response) => {
   }
 });
 
-export const getCurrentUser = asyncWrapper(async (req: Request, res: Response) => {
+export const getCurrentUser = asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) {
     res.status(401).json({ message: 'No token provided' });
@@ -155,7 +155,7 @@ export const getCurrentUser = asyncWrapper(async (req: Request, res: Response) =
   }
 });
 
-export const refreshToken = asyncWrapper(async (req: Request, res: Response) => {
+export const refreshToken = asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const { refresh_token } = req.body;
   
   if (!refresh_token) {

@@ -1,22 +1,11 @@
 import { Database } from 'supabase-js';
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        role: 'job_seeker' | 'employer' | 'admin';
-      };
-    }
-  }
-}
-
 export type JobType = 'full_time' | 'part_time' | 'contract' | 'internship' | 'remote';
 export type ApplicationStatus = 'submitted' | 'reviewed' | 'interviewing' | 'offered' | 'rejected' | 'withdrawn';
 
 // Extend the Database interface with your custom types
-declare module 'supabase-js' {
- export interface Database {
+declare module '@supabase/supabase-js' {
+  export interface Database {
     public: {
       Tables: {
         profiles: {

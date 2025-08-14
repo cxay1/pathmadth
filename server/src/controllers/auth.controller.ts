@@ -1,97 +1,132 @@
 import { Request, Response } from 'express';
 import { supabase } from '../config/db';
+import { asyncHandler } from '../middleware/error.middleware';
 
-export const register = async (req: Request, res: Response) => {
-  try {
-    const { email, password, role, firstName, lastName } = req.body;
+export const register = asyncHandler(async (req: Request, res: Response) => {
+  const { email, password, role, firstName, lastName } = req.body;
 
-    // Create auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
+  // Validate required fields
+  if (!email || !password || !firstName || !lastName || !role) {
+    return res.status(400).json({ 
+      message: 'Email, password, first name, last name, and role are required' 
     });
+  }
 
-    if (authError) throw authError;
+  // Create auth user
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email,
+    password,
+  });
 
-    // Create profile
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .insert([{
-        user_id: authData.user?.id,
-        role,
-        first_name: firstName,
-        last_name: lastName,
-      }])
-      .select()
-      .single();
+  if (authError) {
+    throw new Error(authError.message);
+  }
 
-    if (profileError) throw profileError;
+  // Create profile
+  const { data: profileData, error: profileError } = await supabase
+    .from('profiles')
+    .insert([{
+      user_id: authData.user?.id,
+      role,
+      first_name: firstName,
+      last_name: lastName,
+    }])
+    .select()
+    .single();
 
-    // Create role-specific profile
-    if (role === 'job_seeker') {
-      await supabase
-        .from('job_seekers')
-        .insert([{ id: profileData.id }]);
-    } else if (role === 'employer') {
-      await supabase
-        .from('employers')
-        .insert([{ id: profileData.id }]);
+  if (profileError) {
+    throw new Error(profileError.message);
+  }
+
+  // Create role-specific profile
+  if (role === 'job_seeker') {
+    const { error: jobSeekerError } = await supabase
+      .from('job_seekers')
+      .insert([{ id: profileData.id }]);
+    
+    if (jobSeekerError) {
+      console.warn('Failed to create job seeker profile:', jobSeekerError.message);
     }
-
-    res.status(201).json(profileData);
-  } catch (error: any) {
-    res.status(400).json({ message: error.message });
+  } else if (role === 'employer') {
+    const { error: employerError } = await supabase
+      .from('employers')
+      .insert([{ id: profileData.id }]);
+      
+    if (employerError) {
+      console.warn('Failed to create employer profile:', employerError.message);
+    }
   }
-};
 
-export const login = async (req: Request, res: Response) => {
-  try {
-    const { email, password } = req.body;
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+  res.status(201).json({
+    message: 'User registered successfully',
+    user: profileData
+  });
+});
+
+export const login = asyncHandler(async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  // Validate required fields
+  if (!email || !password) {
+    return res.status(400).json({ 
+      message: 'Email and password are required' 
     });
-
-    if (error) throw error;
-
-    // Get user profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', data.user.id)
-      .single();
-
-    if (profileError) throw profileError;
-
-    res.json({
-      access_token: data.session.access_token,
-      refresh_token: data.session.refresh_token,
-      user: profile,
-    });
-  } catch (error: any) {
-    res.status(401).json({ message: error.message });
   }
-};
 
-export const getCurrentUser = async (req: Request, res: Response) => {
-  try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) throw new Error('No token provided');
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error) throw error;
-    if (!user) throw new Error('User not found');
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    if (profileError) throw profileError;
-
-    res.json(profile);
-  } catch (error: any) {
-    res.status(401).json({ message: error.message });
+  if (error) {
+    throw new Error('Invalid email or password');
   }
-};
+
+  // Get user profile
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('user_id', data.user.id)
+    .single();
+
+  if (profileError) {
+    throw new Error('User profile not found');
+  }
+
+  res.json({
+    message: 'Login successful',
+    access_token: data.session.access_token,
+    refresh_token: data.session.refresh_token,
+    user: profile,
+  });
+});
+
+export const getCurrentUser = asyncHandler(async (req: Request, res: Response) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error) {
+    throw new Error('Invalid or expired token');
+  }
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+
+  if (profileError) {
+    throw new Error('User profile not found');
+  }
+
+  res.json({
+    message: 'User retrieved successfully',
+    user: profile
+  });
+});

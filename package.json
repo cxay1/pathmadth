@@ -4,10 +4,27 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "node scripts/dev.js",
+    "dev:client": "vite",
+    "dev:server": "cd server && npm run dev",
+    "dev:simple": "concurrently \"npm run dev:server\" \"npm run dev:client\" --names \"SERVER,CLIENT\" --prefix-colors \"blue,green\"",
+    "build": "npm run build:server && npm run build:client",
+    "build:client": "vite build",
+    "build:server": "cd server && npm run build",
+    "start": "node scripts/start.js",
+    "start:client": "vite preview",
+    "start:server": "cd server && npm start",
+    "start:simple": "concurrently \"npm run start:server\" \"npm run start:client\" --names \"SERVER,CLIENT\" --prefix-colors \"blue,green\"",
+    "install:all": "npm install && cd server && npm install",
+    "clean": "rm -rf dist && cd server && rm -rf dist node_modules && rm -rf node_modules",
+    "clean:build": "rm -rf dist && cd server && rm -rf dist",
+    "setup": "npm run install:all",
+    "reset": "npm run clean && npm run setup",
+    "health": "curl -s http://localhost:5000/api/health | json_pp || echo 'Server not responding'",
+    "help": "node scripts/help.js",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "cd server && npm install"
   },
   "dependencies": {
     "@chakra-ui/react": "^2.8.2",
@@ -39,10 +56,13 @@
     "@types/react-dom": "^18.3.7",
     "@types/react-dropzone": "^5.1.0",
     "@vitejs/plugin-react": "^4.4.1",
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3",
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "wait-on": "^8.0.1"
   }
 }

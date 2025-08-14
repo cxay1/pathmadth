@@ -1,7 +1,14 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { supabase } from '../config/db';
 
-export const getAllJobs = async (req: Request, res: Response) => {
+// Simple async wrapper without complex types
+const asyncWrapper = (fn: Function) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+};
+
+export const getAllJobs = asyncWrapper(async (req: Request, res: Response) => {
   try {
     const { type, location, limit = 10, offset = 0 } = req.query;
 
@@ -16,16 +23,29 @@ export const getAllJobs = async (req: Request, res: Response) => {
 
     const { data, error } = await query;
 
-    if (error) throw error;
-    res.json(data);
-  } catch (error: any) {
-    res.status(400).json({ message: error.message });
-  }
-};
+    if (error) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
 
-export const getJobDetails = async (req: Request, res: Response) => {
+    res.json({
+      message: 'Jobs retrieved successfully',
+      jobs: data,
+      total: data?.length || 0
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message || 'Failed to get jobs' });
+  }
+});
+
+export const getJobDetails = asyncWrapper(async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+
+    if (!id) {
+      res.status(400).json({ message: 'Job ID is required' });
+      return;
+    }
 
     const { data, error } = await supabase
       .from('jobs')
@@ -33,20 +53,35 @@ export const getJobDetails = async (req: Request, res: Response) => {
       .eq('id', id)
       .single();
 
-    if (error) throw error;
-    res.json(data);
-  } catch (error: any) {
-    res.status(404).json({ message: error.message });
-  }
-};
+    if (error) {
+      res.status(404).json({ message: 'Job not found' });
+      return;
+    }
 
-export const createJob = async (req: Request, res: Response) => {
+    res.json({
+      message: 'Job details retrieved successfully',
+      job: data
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message || 'Failed to get job details' });
+  }
+});
+
+export const createJob = asyncWrapper(async (req: Request, res: Response) => {
   try {
     const { title, description, requirements, responsibilities, job_type, location, salary_range } = req.body;
     const employerId = req.user?.id;
 
+    // Validate required fields
+    if (!title || !description || !job_type || !location) {
+      res.status(400).json({ 
+        message: 'Title, description, job type, and location are required' 
+      });
+      return;
+    }
+
     if (!employerId) {
-      res.status(403).json({ message: 'Unauthorized' });
+      res.status(403).json({ message: 'Unauthorized - Employer access required' });
       return;
     }
 
@@ -56,18 +91,27 @@ export const createJob = async (req: Request, res: Response) => {
         employer_id: employerId,
         title,
         description,
-        requirements,
-        responsibilities,
+        requirements: requirements || [],
+        responsibilities: responsibilities || [],
         job_type,
         location,
         salary_range,
+        is_active: true,
+        created_at: new Date().toISOString()
       }])
       .select()
       .single();
 
-    if (error) throw error;
-    res.status(201).json(data);
+    if (error) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+
+    res.status(201).json({
+      message: 'Job created successfully',
+      job: data
+    });
   } catch (error: any) {
-    res.status(400).json({ message: error.message });
+    res.status(500).json({ message: error.message || 'Failed to create job' });
   }
-};
+});

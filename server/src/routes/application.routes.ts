@@ -28,13 +28,10 @@ const upload = multer({
 });
 
 // Public route for job applications (no authentication required)
-// @ts-ignore
 router.post('/public', upload.single('resume'), submitPublicApplication);
 
 // Protected routes
-// @ts-ignore
 router.post('/', authenticate, requireJobSeeker, submitApplication);
-// @ts-ignore
 router.put('/:id/status', authenticate, requireEmployerOrAdmin, updateApplicationStatus);
 
 export default router;

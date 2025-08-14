@@ -9,13 +9,10 @@ import { authenticate, requireEmployerOrAdmin } from '../middleware/auth.middlew
 const router = Router();
 
 // Public routes
-// @ts-ignore
 router.get('/', getAllJobs);
-// @ts-ignore
 router.get('/:id', getJobDetails);
 
 // Protected routes (employers only)
-// @ts-ignore
 router.post('/', authenticate, requireEmployerOrAdmin, createJob);
 
 export default router;

@@ -17,5 +17,6 @@
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "send-report.ts"]
+  "exclude": ["node_modules", "dist", "send-report.ts"],
+  "typeRoots": ["./node_modules/@types", "./src/types"]
 } 

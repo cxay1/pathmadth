@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/context/AuthContext';
 import { Link } from 'react-router-dom';
+import { authApi, ApiError } from '../utils/api';
 
 const Auth: React.FC = () => {
   const [tab, setTab] = useState<'login' | 'register'>('login');
@@ -55,37 +56,58 @@ const Auth: React.FC = () => {
           return;
         }
 
-        // For demo purposes, create a mock token with user data
-        const mockToken = btoa(JSON.stringify({
-          userId: Date.now().toString(),
+        // Make API call to register endpoint
+        const data = await authApi.register({
           email: form.email,
+          password: form.password,
           firstName: form.firstName,
           lastName: form.lastName,
           role: role.toLowerCase().replace(' ', '_'),
+        });
+        
+        // Create a simple token for the registered user
+        const token = btoa(JSON.stringify({
+          userId: data.user?.id || Date.now().toString(),
+          email: form.email,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          role: data.user?.role || role.toLowerCase().replace(' ', '_'),
           exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours from now
           iat: Math.floor(Date.now() / 1000)
         }));
 
-        login(mockToken);
+        login(token);
         navigate('/');
       } else {
-        // For demo purposes, create a mock login
-        // In a real app, you'd make an API call here
-        const mockToken = btoa(JSON.stringify({
-          userId: '12345',
+        // Make API call to login endpoint
+        const data = await authApi.login({
           email: form.email,
-          firstName: 'John', // Mock data for demo
-          lastName: 'Doe',
-          role: 'job_seeker',
+          password: form.password,
+        });
+        
+        // Use the token from the server or create a fallback
+        const token = data.access_token || btoa(JSON.stringify({
+          userId: data.user?.id || '12345',
+          email: data.user?.email || form.email,
+          firstName: data.user?.first_name || 'User',
+          lastName: data.user?.last_name || '',
+          role: data.user?.role || 'job_seeker',
           exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
           iat: Math.floor(Date.now() / 1000)
         }));
 
-        login(mockToken);
+        login(token);
         navigate('/');
       }
     } catch (error) {
-      setError('Authentication failed. Please try again.');
+      console.error('Authentication error:', error);
+      if (error instanceof ApiError) {
+        setError(error.message);
+      } else if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Authentication failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }

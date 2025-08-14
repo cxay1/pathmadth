@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import multer from 'multer';
+import { uploadSingle } from '../config/multer';
 import { 
   submitApplication, 
   updateApplicationStatus,
@@ -9,32 +9,11 @@ import { authenticate, requireJobSeeker, requireEmployerOrAdmin } from '../middl
 
 const router = Router();
 
-// Configure multer for file uploads
-const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    // Allow only PDF, DOC, DOCX files
-    if (file.mimetype === 'application/pdf' || 
-        file.mimetype === 'application/msword' || 
-        file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-      cb(null, true);
-    } else {
-      cb(new Error('Only PDF, DOC, and DOCX files are allowed'));
-    }
-  }
-});
-
 // Public route for job applications (no authentication required)
-// @ts-ignore
-router.post('/public', upload.single('resume'), submitPublicApplication);
+router.post('/public', uploadSingle('resume'), submitPublicApplication);
 
 // Protected routes
-// @ts-ignore
 router.post('/', authenticate, requireJobSeeker, submitApplication);
-// @ts-ignore
 router.put('/:id/status', authenticate, requireEmployerOrAdmin, updateApplicationStatus);
 
 export default router;

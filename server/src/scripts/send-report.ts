@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 
-import { sendReportNow } from './src/utils/sendReport';
+import { sendReportNow } from '../utils/sendReport';
 
 // Execute the email sending
 sendReportNow()

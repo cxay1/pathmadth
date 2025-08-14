@@ -2,14 +2,15 @@ import { Request, Response } from 'express';
 import { supabase } from '../config/db';
 import { asyncHandler } from '../middleware/error.middleware';
 
-export const register = asyncHandler(async (req: Request, res: Response) => {
+export const register = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { email, password, role, firstName, lastName } = req.body;
 
   // Validate required fields
   if (!email || !password || !firstName || !lastName || !role) {
-    return res.status(400).json({ 
+    res.status(400).json({ 
       message: 'Email, password, first name, last name, and role are required' 
     });
+    return;
   }
 
   // Create auth user
@@ -63,14 +64,15 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-export const login = asyncHandler(async (req: Request, res: Response) => {
+export const login = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body;
 
   // Validate required fields
   if (!email || !password) {
-    return res.status(400).json({ 
+    res.status(400).json({ 
       message: 'Email and password are required' 
     });
+    return;
   }
 
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -101,10 +103,11 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-export const getCurrentUser = asyncHandler(async (req: Request, res: Response) => {
+export const getCurrentUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) {
-    return res.status(401).json({ message: 'No token provided' });
+    res.status(401).json({ message: 'No token provided' });
+    return;
   }
 
   const { data: { user }, error } = await supabase.auth.getUser(token);
@@ -128,5 +131,28 @@ export const getCurrentUser = asyncHandler(async (req: Request, res: Response) =
   res.json({
     message: 'User retrieved successfully',
     user: profile
+  });
+});
+
+export const refreshToken = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const { refresh_token } = req.body;
+  
+  if (!refresh_token) {
+    res.status(400).json({ message: 'Refresh token is required' });
+    return;
+  }
+
+  const { data, error } = await supabase.auth.refreshSession({
+    refresh_token
+  });
+
+  if (error) {
+    throw new Error('Invalid or expired refresh token');
+  }
+
+  res.json({
+    message: 'Token refreshed successfully',
+    access_token: data.session?.access_token,
+    refresh_token: data.session?.refresh_token,
   });
 });

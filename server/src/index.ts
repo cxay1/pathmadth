@@ -6,6 +6,7 @@ import applicationRoutes from './routes/application.routes';
 import jobRoutes from './routes/job.routes';
 import jobSeekerRoutes from './routes/jobSeeker.routes';
 import employerRoutes from './routes/employer.routes';
+import emailRoutes from './routes/email.routes';
 import { errorHandler, notFound } from './middleware/error.middleware';
 
 const app: Express = express();
@@ -24,6 +25,7 @@ app.use('/api/applications', applicationRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/job-seekers', jobSeekerRoutes);
 app.use('/api/employers', employerRoutes);
+app.use('/api/email', emailRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req: Request, res: Response) => {

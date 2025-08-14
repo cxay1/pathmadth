@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/context/AuthContext';
 import { Link } from 'react-router-dom';
-import { authApi, ApiError } from '../utils/api';
+import axios from 'axios';
+
+const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:5000/api';
 
 const Auth: React.FC = () => {
   const [tab, setTab] = useState<'login' | 'register'>('login');
@@ -56,57 +58,71 @@ const Auth: React.FC = () => {
           return;
         }
 
+        console.log('Making registration request to:', `${API_BASE_URL}/auth/register`);
+
         // Make API call to register endpoint
-        const data = await authApi.register({
+        const response = await axios.post(`${API_BASE_URL}/auth/register`, {
           email: form.email,
           password: form.password,
           firstName: form.firstName,
           lastName: form.lastName,
           role: role.toLowerCase().replace(' ', '_'),
+        }, {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          timeout: 10000
         });
-        
-        // Create a simple token for the registered user
-        const token = btoa(JSON.stringify({
-          userId: data.user?.id || Date.now().toString(),
-          email: form.email,
-          firstName: form.firstName,
-          lastName: form.lastName,
-          role: data.user?.role || role.toLowerCase().replace(' ', '_'),
-          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours from now
-          iat: Math.floor(Date.now() / 1000)
-        }));
 
-        login(token);
-        navigate('/');
+        console.log('Registration response:', response.data);
+        
+        // Use the token from the server
+        const token = response.data.access_token;
+        if (token) {
+          login(token);
+          navigate('/');
+        } else {
+          setError('Registration successful but no token received');
+        }
       } else {
+        console.log('Making login request to:', `${API_BASE_URL}/auth/login`);
+
         // Make API call to login endpoint
-        const data = await authApi.login({
+        const response = await axios.post(`${API_BASE_URL}/auth/login`, {
           email: form.email,
           password: form.password,
+        }, {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          timeout: 10000
         });
-        
-        // Use the token from the server or create a fallback
-        const token = data.access_token || btoa(JSON.stringify({
-          userId: data.user?.id || '12345',
-          email: data.user?.email || form.email,
-          firstName: data.user?.first_name || 'User',
-          lastName: data.user?.last_name || '',
-          role: data.user?.role || 'job_seeker',
-          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
-          iat: Math.floor(Date.now() / 1000)
-        }));
 
-        login(token);
-        navigate('/');
+        console.log('Login response:', response.data);
+        
+        // Use the token from the server
+        const token = response.data.access_token;
+        if (token) {
+          login(token);
+          navigate('/');
+        } else {
+          setError('Login successful but no token received');
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Authentication error:', error);
-      if (error instanceof ApiError) {
-        setError(error.message);
-      } else if (error instanceof Error) {
-        setError(error.message);
+      
+      if (error.response) {
+        // Server responded with error
+        const message = error.response.data?.message || `Server error: ${error.response.status}`;
+        setError(message);
+      } else if (error.request) {
+        // Network error
+        console.error('Network error:', error.request);
+        setError('Network error: Unable to connect to server. Please check if the server is running.');
       } else {
-        setError('Authentication failed. Please try again.');
+        // Other error
+        setError(error.message || 'Authentication failed. Please try again.');
       }
     } finally {
       setIsLoading(false);

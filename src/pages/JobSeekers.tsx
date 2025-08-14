@@ -186,16 +186,16 @@ const JobSeekers: React.FC = () => {
         formData.append('resume', form.resume);
       }
 
-      const response = await fetch('/api/applications/public', {
+      const response = await fetch(`${import.meta.env?.VITE_API_URL || 'http://localhost:5000/api'}/email/job-application`, {
         method: 'POST',
         body: formData,
       });
 
+      console.log('Application response status:', response.status);
+
       if (response.ok) {
         const result = await response.json();
-        
-        // Show success message
-        setShowSuccessMessage(true);
+        console.log('Application submitted successfully:', result);
         
         // Show success message
         setShowSuccessMessage(true);
@@ -216,20 +216,20 @@ const JobSeekers: React.FC = () => {
           setIsModalOpen(false);
         }, 3000);
         
-        
-        // Auto-hide success message and close modal after 3 seconds
-        setTimeout(() => {
-          setShowSuccessMessage(false);
-          setIsModalOpen(false);
-        }, 3000);
-        
       } else {
-        const error = await response.json();
-        alert(`Error submitting application: ${error.message}`);
+        let errorMessage = 'Failed to submit application';
+        try {
+          const error = await response.json();
+          errorMessage = error.message || errorMessage;
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+          errorMessage = `Server error: ${response.status}`;
+        }
+        alert(`Error submitting application: ${errorMessage}`);
       }
     } catch (error) {
       console.error('Error submitting application:', error);
-      alert('Error submitting application. Please try again.');
+      alert('Network error: Unable to connect to server. Please check if the server is running.');
     } finally {
       setIsSubmitting(false);
     }

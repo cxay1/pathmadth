@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { Request, Response, NextFunction } from 'express';
 
 export const errorHandler = (
   err: Error,
@@ -47,7 +47,7 @@ export const notFound = (req: Request, res: Response): void => {
 // Async error wrapper for controllers
 export const asyncHandler = (
   fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
-): RequestHandler => {
+) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };

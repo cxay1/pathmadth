@@ -1,8 +1,14 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { supabase } from '../config/db';
-import { asyncHandler } from '../middleware/error.middleware';
 
-export const register = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+// Simple async wrapper without complex types
+const asyncWrapper = (fn: Function) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+};
+
+export const register = asyncWrapper(async (req: Request, res: Response) => {
   const { email, password, role, firstName, lastName } = req.body;
 
   // Validate required fields
@@ -13,58 +19,64 @@ export const register = asyncHandler(async (req: Request, res: Response): Promis
     return;
   }
 
-  // Create auth user
-  const { data: authData, error: authError } = await supabase.auth.signUp({
-    email,
-    password,
-  });
+  try {
+    // Create auth user
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
 
-  if (authError) {
-    throw new Error(authError.message);
-  }
-
-  // Create profile
-  const { data: profileData, error: profileError } = await supabase
-    .from('profiles')
-    .insert([{
-      user_id: authData.user?.id,
-      role,
-      first_name: firstName,
-      last_name: lastName,
-    }])
-    .select()
-    .single();
-
-  if (profileError) {
-    throw new Error(profileError.message);
-  }
-
-  // Create role-specific profile
-  if (role === 'job_seeker') {
-    const { error: jobSeekerError } = await supabase
-      .from('job_seekers')
-      .insert([{ id: profileData.id }]);
-    
-    if (jobSeekerError) {
-      console.warn('Failed to create job seeker profile:', jobSeekerError.message);
+    if (authError) {
+      res.status(400).json({ message: authError.message });
+      return;
     }
-  } else if (role === 'employer') {
-    const { error: employerError } = await supabase
-      .from('employers')
-      .insert([{ id: profileData.id }]);
+
+    // Create profile
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .insert([{
+        user_id: authData.user?.id,
+        role,
+        first_name: firstName,
+        last_name: lastName,
+      }])
+      .select()
+      .single();
+
+    if (profileError) {
+      res.status(400).json({ message: profileError.message });
+      return;
+    }
+
+    // Create role-specific profile
+    if (role === 'job_seeker') {
+      const { error: jobSeekerError } = await supabase
+        .from('job_seekers')
+        .insert([{ id: profileData.id }]);
       
-    if (employerError) {
-      console.warn('Failed to create employer profile:', employerError.message);
+      if (jobSeekerError) {
+        console.warn('Failed to create job seeker profile:', jobSeekerError.message);
+      }
+    } else if (role === 'employer') {
+      const { error: employerError } = await supabase
+        .from('employers')
+        .insert([{ id: profileData.id }]);
+        
+      if (employerError) {
+        console.warn('Failed to create employer profile:', employerError.message);
+      }
     }
-  }
 
-  res.status(201).json({
-    message: 'User registered successfully',
-    user: profileData
-  });
+    res.status(201).json({
+      message: 'User registered successfully',
+      user: profileData
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message || 'Registration failed' });
+  }
 });
 
-export const login = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+export const login = asyncWrapper(async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   // Validate required fields
@@ -75,66 +87,75 @@ export const login = asyncHandler(async (req: Request, res: Response): Promise<v
     return;
   }
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  if (error) {
-    throw new Error('Invalid email or password');
+    if (error) {
+      res.status(401).json({ message: 'Invalid email or password' });
+      return;
+    }
+
+    // Get user profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', data.user.id)
+      .single();
+
+    if (profileError) {
+      res.status(404).json({ message: 'User profile not found' });
+      return;
+    }
+
+    res.json({
+      message: 'Login successful',
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+      user: profile,
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message || 'Login failed' });
   }
-
-  // Get user profile
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('user_id', data.user.id)
-    .single();
-
-  if (profileError) {
-    throw new Error('User profile not found');
-  }
-
-  res.json({
-    message: 'Login successful',
-    access_token: data.session.access_token,
-    refresh_token: data.session.refresh_token,
-    user: profile,
-  });
 });
 
-export const getCurrentUser = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+export const getCurrentUser = asyncWrapper(async (req: Request, res: Response) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) {
     res.status(401).json({ message: 'No token provided' });
     return;
   }
 
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (error) {
-    throw new Error('Invalid or expired token');
-  }
-  if (!user) {
-    throw new Error('User not found');
-  }
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) {
+      res.status(401).json({ message: 'Invalid or expired token' });
+      return;
+    }
 
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('user_id', user.id)
-    .single();
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
 
-  if (profileError) {
-    throw new Error('User profile not found');
+    if (profileError) {
+      res.status(404).json({ message: 'User profile not found' });
+      return;
+    }
+
+    res.json({
+      message: 'User retrieved successfully',
+      user: profile
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message || 'Failed to get user' });
   }
-
-  res.json({
-    message: 'User retrieved successfully',
-    user: profile
-  });
 });
 
-export const refreshToken = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+export const refreshToken = asyncWrapper(async (req: Request, res: Response) => {
   const { refresh_token } = req.body;
   
   if (!refresh_token) {
@@ -142,17 +163,22 @@ export const refreshToken = asyncHandler(async (req: Request, res: Response): Pr
     return;
   }
 
-  const { data, error } = await supabase.auth.refreshSession({
-    refresh_token
-  });
+  try {
+    const { data, error } = await supabase.auth.refreshSession({
+      refresh_token
+    });
 
-  if (error) {
-    throw new Error('Invalid or expired refresh token');
+    if (error) {
+      res.status(401).json({ message: 'Invalid or expired refresh token' });
+      return;
+    }
+
+    res.json({
+      message: 'Token refreshed successfully',
+      access_token: data.session?.access_token,
+      refresh_token: data.session?.refresh_token,
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message || 'Token refresh failed' });
   }
-
-  res.json({
-    message: 'Token refreshed successfully',
-    access_token: data.session?.access_token,
-    refresh_token: data.session?.refresh_token,
-  });
 });

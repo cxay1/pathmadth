@@ -67,11 +67,11 @@ const Auth: React.FC = () => {
         
         // Create a simple token for the registered user
         const token = btoa(JSON.stringify({
-          userId: data.id || Date.now().toString(),
+          userId: data.user?.id || Date.now().toString(),
           email: form.email,
           firstName: form.firstName,
           lastName: form.lastName,
-          role: data.role || role.toLowerCase().replace(' ', '_'),
+          role: data.user?.role || role.toLowerCase().replace(' ', '_'),
           exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours from now
           iat: Math.floor(Date.now() / 1000)
         }));

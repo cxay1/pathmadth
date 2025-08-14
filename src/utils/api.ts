@@ -1,4 +1,34 @@
+import axios, { AxiosResponse, AxiosError } from 'axios';
+
 const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:5000';
+
+// Create axios instance with default configuration
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Response interceptor for better error handling
+apiClient.interceptors.response.use(
+  (response: AxiosResponse) => response,
+  (error: AxiosError) => {
+    if (error.response) {
+      // Server responded with error status
+      const message = (error.response.data as any)?.message || 
+                     `HTTP error! status: ${error.response.status}`;
+      throw new ApiError(error.response.status, message);
+    } else if (error.request) {
+      // Request was made but no response received
+      throw new ApiError(0, 'Network error or server unavailable');
+    } else {
+      // Something else happened
+      throw new ApiError(0, error.message || 'Unknown error occurred');
+    }
+  }
+);
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -9,49 +39,24 @@ export class ApiError extends Error {
 
 export const apiRequest = async (
   endpoint: string,
-  options: RequestInit = {}
+  options: {
+    method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+    data?: any;
+    headers?: Record<string, string>;
+  } = {}
 ): Promise<any> => {
-  const url = `${API_BASE_URL}${endpoint}`;
-  
-  const defaultHeaders = {
-    'Content-Type': 'application/json',
-    ...options.headers,
-  };
-
   try {
-    const response = await fetch(url, {
-      ...options,
-      headers: defaultHeaders,
+    const response = await apiClient({
+      url: endpoint,
+      method: options.method || 'GET',
+      data: options.data,
+      headers: options.headers,
     });
-
-    // Check if response is ok
-    if (!response.ok) {
-      let errorMessage = `HTTP error! status: ${response.status}`;
-      
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
-      } catch (e) {
-        // If JSON parsing fails, use the default error message
-      }
-      
-      throw new ApiError(response.status, errorMessage);
-    }
-
-    // Check if response has content
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      return await response.json();
-    } else {
-      return response.text();
-    }
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
     
-    // Network or other errors
-    throw new ApiError(0, 'Network error or server unavailable');
+    return response.data;
+  } catch (error) {
+    // Error is already handled by interceptor
+    throw error;
   }
 };
 
@@ -66,19 +71,27 @@ export const authApi = {
   }) => {
     return apiRequest('/api/auth/register', {
       method: 'POST',
-      body: JSON.stringify(userData),
+      data: userData,
     });
   },
 
   login: async (credentials: { email: string; password: string }) => {
     return apiRequest('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify(credentials),
+      data: credentials,
+    });
+  },
+
+  refreshToken: async (refreshToken: string) => {
+    return apiRequest('/api/auth/refresh', {
+      method: 'POST',
+      data: { refresh_token: refreshToken },
     });
   },
 
   getCurrentUser: async (token: string) => {
     return apiRequest('/api/auth/me', {
+      method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
       },

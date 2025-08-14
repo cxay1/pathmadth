@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { supabase } from '../config/db';
+import jwt from 'jsonwebtoken';
 
 // Simple async wrapper without complex types
 const asyncWrapper = (fn: Function) => {
@@ -8,8 +9,14 @@ const asyncWrapper = (fn: Function) => {
   };
 };
 
+// Mock users storage for development
+const mockUsers: any[] = [];
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-change-in-production';
+
 export const register = asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const { email, password, role, firstName, lastName } = req.body;
+
+  console.log('Registration request received:', { email, firstName, lastName, role });
 
   // Validate required fields
   if (!email || !password || !firstName || !lastName || !role) {
@@ -19,65 +26,74 @@ export const register = asyncWrapper(async (req: Request, res: Response): Promis
     return;
   }
 
+  // Basic email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    res.status(400).json({ message: 'Invalid email format' });
+    return;
+  }
+
+  // Password validation
+  if (password.length < 6) {
+    res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    return;
+  }
+
   try {
-    // Create auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // Check if user already exists
+    const existingUser = mockUsers.find(user => user.email === email);
+    if (existingUser) {
+      res.status(400).json({ message: 'User with this email already exists' });
+      return;
+    }
+
+    // Create new user
+    const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const newUser = {
+      id: userId,
       email,
-      password,
-    });
+      first_name: firstName,
+      last_name: lastName,
+      role: role,
+      password: password, // In production, this should be hashed
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
 
-    if (authError) {
-      res.status(400).json({ message: authError.message });
-      return;
-    }
+    mockUsers.push(newUser);
 
-    // Create profile
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .insert([{
-        user_id: authData.user?.id,
-        role,
-        first_name: firstName,
-        last_name: lastName,
-      }])
-      .select()
-      .single();
+    // Create JWT token
+    const token = jwt.sign(
+      { 
+        userId: newUser.id, 
+        email: newUser.email, 
+        role: newUser.role 
+      },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
-    if (profileError) {
-      res.status(400).json({ message: profileError.message });
-      return;
-    }
+    // Remove password from response
+    const { password: _, ...userResponse } = newUser;
 
-    // Create role-specific profile
-    if (role === 'job_seeker') {
-      const { error: jobSeekerError } = await supabase
-        .from('job_seekers')
-        .insert([{ id: profileData.id }]);
-      
-      if (jobSeekerError) {
-        console.warn('Failed to create job seeker profile:', jobSeekerError.message);
-      }
-    } else if (role === 'employer') {
-      const { error: employerError } = await supabase
-        .from('employers')
-        .insert([{ id: profileData.id }]);
-        
-      if (employerError) {
-        console.warn('Failed to create employer profile:', employerError.message);
-      }
-    }
+    console.log('User registered successfully:', userResponse);
 
     res.status(201).json({
       message: 'User registered successfully',
-      user: profileData
+      user: userResponse,
+      access_token: token,
+      refresh_token: token // Using same token for simplicity in development
     });
   } catch (error: any) {
+    console.error('Registration error:', error);
     res.status(500).json({ message: error.message || 'Registration failed' });
   }
 });
 
 export const login = asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body;
+
+  console.log('Login request received:', { email });
 
   // Validate required fields
   if (!email || !password) {
@@ -88,70 +104,69 @@ export const login = asyncWrapper(async (req: Request, res: Response): Promise<v
   }
 
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
+    // Find user
+    const user = mockUsers.find(u => u.email === email && u.password === password);
+    
+    if (!user) {
       res.status(401).json({ message: 'Invalid email or password' });
       return;
     }
 
-    // Get user profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', data.user.id)
-      .single();
+    // Create JWT token
+    const token = jwt.sign(
+      { 
+        userId: user.id, 
+        email: user.email, 
+        role: user.role 
+      },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
-    if (profileError) {
-      res.status(404).json({ message: 'User profile not found' });
-      return;
-    }
+    // Remove password from response
+    const { password: _, ...userResponse } = user;
+
+    console.log('User logged in successfully:', userResponse);
 
     res.json({
       message: 'Login successful',
-      access_token: data.session.access_token,
-      refresh_token: data.session.refresh_token,
-      user: profile,
+      access_token: token,
+      refresh_token: token, // Using same token for simplicity in development
+      user: userResponse
     });
   } catch (error: any) {
+    console.error('Login error:', error);
     res.status(500).json({ message: error.message || 'Login failed' });
   }
 });
 
 export const getCurrentUser = asyncWrapper(async (req: Request, res: Response): Promise<void> => {
   const token = req.headers.authorization?.split(' ')[1];
+  
   if (!token) {
     res.status(401).json({ message: 'No token provided' });
     return;
   }
 
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) {
-      res.status(401).json({ message: 'Invalid or expired token' });
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const user = mockUsers.find(u => u.id === decoded.userId);
+    
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
       return;
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    if (profileError) {
-      res.status(404).json({ message: 'User profile not found' });
-      return;
-    }
+    // Remove password from response
+    const { password: _, ...userResponse } = user;
 
     res.json({
       message: 'User retrieved successfully',
-      user: profile
+      user: userResponse
     });
   } catch (error: any) {
-    res.status(500).json({ message: error.message || 'Failed to get user' });
+    console.error('Get user error:', error);
+    res.status(401).json({ message: 'Invalid or expired token' });
   }
 });
 
@@ -164,21 +179,26 @@ export const refreshToken = asyncWrapper(async (req: Request, res: Response): Pr
   }
 
   try {
-    const { data, error } = await supabase.auth.refreshSession({
-      refresh_token
-    });
-
-    if (error) {
-      res.status(401).json({ message: 'Invalid or expired refresh token' });
-      return;
-    }
+    const decoded = jwt.verify(refresh_token, JWT_SECRET) as any;
+    
+    // Create new token
+    const newToken = jwt.sign(
+      { 
+        userId: decoded.userId, 
+        email: decoded.email, 
+        role: decoded.role 
+      },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
 
     res.json({
       message: 'Token refreshed successfully',
-      access_token: data.session?.access_token,
-      refresh_token: data.session?.refresh_token,
+      access_token: newToken,
+      refresh_token: newToken
     });
   } catch (error: any) {
-    res.status(500).json({ message: error.message || 'Token refresh failed' });
+    console.error('Token refresh error:', error);
+    res.status(401).json({ message: 'Invalid or expired refresh token' });
   }
 });

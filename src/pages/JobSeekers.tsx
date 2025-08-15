@@ -4,6 +4,7 @@ import JobCard from "../components/JobCard"
 import JobDetailsModal from "../components/JobDetailsModal"
 import { motion, AnimatePresence } from 'framer-motion';
 import Footer from '../components/Footer'
+import emailjs from '@emailjs/browser';
 
 const FlipModal = ({ isOpen, onClose, children, jobTitle, companyName }: {
   isOpen: boolean;
@@ -179,34 +180,35 @@ const JobSeekers: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Create email content
-      const emailSubject = `Job Application: ${selectedJob.title} at ${selectedJob.company}`;
-      const emailBody = `
-New Job Application Received
+      // EmailJS configuration - REPLACE THESE WITH YOUR ACTUAL CREDENTIALS
+      const SERVICE_ID = 'YOUR_SERVICE_ID'; // Replace with your EmailJS service ID
+      const TEMPLATE_ID = 'YOUR_TEMPLATE_ID'; // Replace with your EmailJS template ID
+      const PUBLIC_KEY = 'YOUR_PUBLIC_KEY'; // Replace with your EmailJS public key
 
-Job Details:
-- Position: ${selectedJob.title}
-- Company: ${selectedJob.company}
-- Job Type: ${selectedJob.jobType}
-- Location: ${selectedJob.location}
-- Salary Range: ${selectedJob.salaryRange}
+      // Prepare template parameters
+      const templateParams = {
+        job_title: selectedJob.title,
+        company_name: selectedJob.company,
+        job_type: selectedJob.jobType,
+        job_location: selectedJob.location,
+        salary_range: selectedJob.salaryRange,
+        applicant_name: form.name,
+        applicant_email: form.email,
+        applicant_phone: form.phone || 'Not provided',
+        cover_letter: form.message || 'No cover letter provided',
+        resume_name: form.resume ? form.resume.name : 'No resume attached',
+        submitted_date: new Date().toLocaleString()
+      };
 
-Applicant Details:
-- Name: ${form.name}
-- Email: ${form.email}
-- Phone: ${form.phone || 'Not provided'}
-- Cover Letter: ${form.message || 'Not provided'}
+      // Send email using EmailJS
+      const result = await emailjs.send(
+        SERVICE_ID,
+        TEMPLATE_ID,
+        templateParams,
+        PUBLIC_KEY
+      );
 
-Resume: ${form.resume ? form.resume.name : 'Not provided'}
-
-Application submitted on: ${new Date().toLocaleString()}
-      `.trim();
-
-      // Create mailto link with all the data
-      const mailtoLink = `mailto:info.pathmatch@gmail.com?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-
-      // Open default email client
-      window.open(mailtoLink, '_blank');
+      console.log('Email sent successfully:', result);
 
       // Show success message
       setShowSuccessMessage(true);
@@ -228,8 +230,8 @@ Application submitted on: ${new Date().toLocaleString()}
       }, 3000);
       
     } catch (error) {
-      console.error('Error preparing application:', error);
-      alert('Error preparing application. Please try again.');
+      console.error('Error sending application:', error);
+      alert('Error sending application. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -709,13 +711,13 @@ Application submitted on: ${new Date().toLocaleString()}
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-green-800 mb-2">Application Prepared Successfully!</h3>
+                <h3 className="text-2xl font-bold text-green-800 mb-2">Application Submitted Successfully!</h3>
                 <p className="text-green-700 mb-4">
                   Thank you for applying to <strong>{selectedJob?.title}</strong> at <strong>{selectedJob?.company}</strong>.
                 </p>
                 <p className="text-green-600 text-sm">
-                  Your default email client should open with the application details. 
-                  Please send the email to complete your application.
+                  Your application has been sent to our team. 
+                  We'll review your application and get back to you soon.
                 </p>
               </div>
               <div className="text-sm text-gray-500">
@@ -737,13 +739,13 @@ Application submitted on: ${new Date().toLocaleString()}
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <h3 className="text-2xl font-bold text-green-800 mb-2">Application Prepared Successfully!</h3>
+                    <h3 className="text-2xl font-bold text-green-800 mb-2">Application Submitted Successfully!</h3>
                     <p className="text-green-700 mb-4">
                       Thank you for applying to <strong>{selectedJob?.title}</strong> at <strong>{selectedJob?.company}</strong>.
                     </p>
                     <p className="text-green-600 text-sm">
-                      Your default email client should open with the application details. 
-                      Please send the email to complete your application.
+                      Your application has been sent to our team. 
+                      We'll review your application and get back to you soon.
                     </p>
                   </div>
                   <div className="text-sm text-gray-500">

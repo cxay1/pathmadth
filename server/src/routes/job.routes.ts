@@ -1,21 +1,22 @@
 import { Router } from 'express';
 import { 
-  getAllJobs, 
-  getJobDetails, 
-  createJob
+  getJobs, 
+  getJob, 
+  createJob,
+  updateJob,
+  deleteJob
 } from '../controllers/job.controller';
 import { authenticate, requireEmployerOrAdmin } from '../middleware/auth.middleware';
 
 const router = Router();
 
 // Public routes
-// @ts-ignore
-router.get('/', getAllJobs);
-// @ts-ignore
-router.get('/:id', getJobDetails);
+router.get('/', getJobs);
+router.get('/:id', getJob);
 
 // Protected routes (employers only)
-// @ts-ignore
 router.post('/', authenticate, requireEmployerOrAdmin, createJob);
+router.put('/:id', authenticate, requireEmployerOrAdmin, updateJob);
+router.delete('/:id', authenticate, requireEmployerOrAdmin, deleteJob);
 
 export default router;

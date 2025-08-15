@@ -5,7 +5,13 @@ import JobDetailsModal from "../components/JobDetailsModal"
 import { motion, AnimatePresence } from 'framer-motion';
 import Footer from '../components/Footer'
 
-const FlipModal = ({ isOpen, onClose, children, jobTitle, companyName }) => (
+const FlipModal = ({ isOpen, onClose, children, jobTitle, companyName }: {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  jobTitle: string;
+  companyName: string;
+}) => (
   <AnimatePresence>
     {isOpen && (
       <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -77,7 +83,7 @@ const initialFilters = {
   jobType: '',
 };
 
-const initialState = (jobs) => ({
+const initialState = (jobs: any[]) => ({
   jobs,
   visibleJobs: jobs.slice(0, 12),
   filters: initialFilters,
@@ -85,11 +91,11 @@ const initialState = (jobs) => ({
   filteredJobs: jobs,
 });
 
-function jobReducer(state, action) {
+function jobReducer(state: any, action: any) {
   switch (action.type) {
     case 'SET_FILTERS': {
       const { search, location, jobType } = action.payload;
-      let filtered = state.jobs.filter(job => {
+              let filtered = state.jobs.filter((job: any) => {
         const matchesSearch =
           !search ||
           job.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -918,7 +924,7 @@ const JobSeekers: React.FC = () => {
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-              {state.visibleJobs.map((job, index) => (
+              {state.visibleJobs.map((job: any, index: number) => (
                 <JobCard
                   key={index}
                   title={job.title}

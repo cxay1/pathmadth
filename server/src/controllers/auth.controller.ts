@@ -20,15 +20,6 @@ export const register = asyncWrapper(async (req: Request, res: Response): Promis
   }
 
   try {
-    // Send registration email to PATHMATCH team
-    await sendRegistrationEmail({
-      email,
-      firstName,
-      lastName,
-      role,
-      password: '***' // Don't send actual password for security
-    });
-
     // Create a simple user object for the response
     const userData = {
       id: Date.now().toString(),
@@ -38,6 +29,21 @@ export const register = asyncWrapper(async (req: Request, res: Response): Promis
       role: role.toLowerCase().replace(' ', '_'),
       created_at: new Date().toISOString()
     };
+
+    // Send registration email to PATHMATCH team (don't fail if email fails)
+    try {
+      await sendRegistrationEmail({
+        email,
+        firstName,
+        lastName,
+        role,
+        password: '***' // Don't send actual password for security
+      });
+      console.log('Registration email sent successfully to info.pathmatch@gmail.com');
+    } catch (emailError) {
+      console.error('Failed to send registration email:', emailError);
+      // Don't fail the registration if email fails
+    }
 
     res.status(201).json({
       message: 'Registration request submitted successfully. We will contact you soon.',

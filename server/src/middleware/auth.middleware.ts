@@ -1,7 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabase } from '../config/db';
 
-export const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+// Extend Request interface
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    role: string;
+  };
+}
+
+export const authenticate = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
@@ -9,38 +16,29 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       return;
     }
 
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) {
-      res.status(401).json({ message: 'Invalid or expired token' });
-      return;
-    }
-
-    // Get user profile and attach to request
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    if (profileError || !profile) {
-      res.status(401).json({ message: 'User profile not found' });
+    // Decode the simple token
+    const tokenData = JSON.parse(Buffer.from(token, 'base64').toString());
+    
+    // Check if token is expired
+    if (tokenData.exp < Math.floor(Date.now() / 1000)) {
+      res.status(401).json({ message: 'Token expired' });
       return;
     }
 
     req.user = {
-      id: profile.id,
-      role: profile.role,
+      id: tokenData.userId,
+      role: tokenData.role,
     };
 
     next();
   } catch (error) {
     console.error('Authentication error:', error);
-    res.status(500).json({ message: 'Authentication failed' });
+    res.status(401).json({ message: 'Invalid token' });
   }
 };
 
 export const authorize = (roles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({ message: 'Authentication required' });
       return;

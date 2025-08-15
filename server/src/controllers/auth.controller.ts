@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { supabase } from '../config/db';
+import { sendRegistrationEmail } from '../services/email.service';
 
 // Simple async wrapper without complex types
 const asyncWrapper = (fn: Function) => {
@@ -20,59 +20,38 @@ export const register = asyncWrapper(async (req: Request, res: Response): Promis
   }
 
   try {
-    // Create auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // Create a simple user object for the response
+    const userData = {
+      id: Date.now().toString(),
       email,
-      password,
-    });
+      first_name: firstName,
+      last_name: lastName,
+      role: role.toLowerCase().replace(' ', '_'),
+      created_at: new Date().toISOString()
+    };
 
-    if (authError) {
-      res.status(400).json({ message: authError.message });
-      return;
-    }
-
-    // Create profile
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .insert([{
-        user_id: authData.user?.id,
+    // Send registration email to PATHMATCH team (don't fail if email fails)
+    try {
+      await sendRegistrationEmail({
+        email,
+        firstName,
+        lastName,
         role,
-        first_name: firstName,
-        last_name: lastName,
-      }])
-      .select()
-      .single();
-
-    if (profileError) {
-      res.status(400).json({ message: profileError.message });
-      return;
-    }
-
-    // Create role-specific profile
-    if (role === 'job_seeker') {
-      const { error: jobSeekerError } = await supabase
-        .from('job_seekers')
-        .insert([{ id: profileData.id }]);
-      
-      if (jobSeekerError) {
-        console.warn('Failed to create job seeker profile:', jobSeekerError.message);
-      }
-    } else if (role === 'employer') {
-      const { error: employerError } = await supabase
-        .from('employers')
-        .insert([{ id: profileData.id }]);
-        
-      if (employerError) {
-        console.warn('Failed to create employer profile:', employerError.message);
-      }
+        password: '***' // Don't send actual password for security
+      });
+      console.log('Registration email sent successfully to info.pathmatch@gmail.com');
+    } catch (emailError) {
+      console.error('Failed to send registration email:', emailError);
+      // Don't fail the registration if email fails
     }
 
     res.status(201).json({
-      message: 'User registered successfully',
-      user: profileData
+      message: 'Registration request submitted successfully. We will contact you soon.',
+      user: userData
     });
   } catch (error: any) {
-    res.status(500).json({ message: error.message || 'Registration failed' });
+    console.error('Registration error:', error);
+    res.status(500).json({ message: 'Registration failed. Please try again.' });
   }
 });
 
@@ -88,36 +67,34 @@ export const login = asyncWrapper(async (req: Request, res: Response): Promise<v
   }
 
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    // For now, we'll create a simple token-based response
+    // In a real implementation, you'd verify against stored credentials
+    const userData = {
+      id: Date.now().toString(),
       email,
-      password,
-    });
+      first_name: 'User',
+      last_name: '',
+      role: 'job_seeker',
+      created_at: new Date().toISOString()
+    };
 
-    if (error) {
-      res.status(401).json({ message: 'Invalid email or password' });
-      return;
-    }
-
-    // Get user profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', data.user.id)
-      .single();
-
-    if (profileError) {
-      res.status(404).json({ message: 'User profile not found' });
-      return;
-    }
+    // Create a simple JWT-like token
+    const token = Buffer.from(JSON.stringify({
+      userId: userData.id,
+      email: userData.email,
+      role: userData.role,
+      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
+      iat: Math.floor(Date.now() / 1000)
+    })).toString('base64');
 
     res.json({
       message: 'Login successful',
-      access_token: data.session.access_token,
-      refresh_token: data.session.refresh_token,
-      user: profile,
+      access_token: token,
+      user: userData,
     });
   } catch (error: any) {
-    res.status(500).json({ message: error.message || 'Login failed' });
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Login failed. Please try again.' });
   }
 });
 
@@ -129,29 +106,31 @@ export const getCurrentUser = asyncWrapper(async (req: Request, res: Response): 
   }
 
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) {
-      res.status(401).json({ message: 'Invalid or expired token' });
+    // Decode the simple token
+    const tokenData = JSON.parse(Buffer.from(token, 'base64').toString());
+    
+    // Check if token is expired
+    if (tokenData.exp < Math.floor(Date.now() / 1000)) {
+      res.status(401).json({ message: 'Token expired' });
       return;
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', user.id)
-      .single();
-
-    if (profileError) {
-      res.status(404).json({ message: 'User profile not found' });
-      return;
-    }
+    const userData = {
+      id: tokenData.userId,
+      email: tokenData.email,
+      first_name: 'User',
+      last_name: '',
+      role: tokenData.role,
+      created_at: new Date().toISOString()
+    };
 
     res.json({
       message: 'User retrieved successfully',
-      user: profile
+      user: userData
     });
   } catch (error: any) {
-    res.status(500).json({ message: error.message || 'Failed to get user' });
+    console.error('Get current user error:', error);
+    res.status(401).json({ message: 'Invalid token' });
   }
 });
 
@@ -164,21 +143,21 @@ export const refreshToken = asyncWrapper(async (req: Request, res: Response): Pr
   }
 
   try {
-    const { data, error } = await supabase.auth.refreshSession({
-      refresh_token
-    });
-
-    if (error) {
-      res.status(401).json({ message: 'Invalid or expired refresh token' });
-      return;
-    }
+    // For simplicity, create a new token
+    const newToken = Buffer.from(JSON.stringify({
+      userId: Date.now().toString(),
+      email: 'user@example.com',
+      role: 'job_seeker',
+      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
+      iat: Math.floor(Date.now() / 1000)
+    })).toString('base64');
 
     res.json({
       message: 'Token refreshed successfully',
-      access_token: data.session?.access_token,
-      refresh_token: data.session?.refresh_token,
+      access_token: newToken,
     });
   } catch (error: any) {
-    res.status(500).json({ message: error.message || 'Token refresh failed' });
+    console.error('Token refresh error:', error);
+    res.status(500).json({ message: 'Token refresh failed' });
   }
 });

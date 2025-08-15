@@ -43,6 +43,72 @@ const getDefaultResponsibility = (jobTitle: string): string => {
   return roleResponsibilities[jobTitle] || 'administrative support, scheduling, client communications, and light research tasks';
 };
 
+// Send registration email to PATHMATCH team
+export const sendRegistrationEmail = async (userData: {
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  password: string;
+}) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER || 'info.pathmatch@gmail.com',
+      to: 'info.pathmatch@gmail.com',
+      subject: `New User Registration: ${userData.firstName} ${userData.lastName}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #dc2626;">New User Registration Request</h2>
+          
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3>User Details:</h3>
+            <p><strong>Name:</strong> ${userData.firstName} ${userData.lastName}</p>
+            <p><strong>Email:</strong> ${userData.email}</p>
+            <p><strong>Role:</strong> ${userData.role}</p>
+            <p><strong>Registration Date:</strong> ${new Date().toLocaleDateString()}</p>
+          </div>
+          
+          <p>A new user has requested to register for PATHMATCH. Please review their information and take appropriate action.</p>
+          
+          <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
+            <h4>Next Steps:</h4>
+            <ul>
+              <li>Review the user's information</li>
+              <li>Contact the user if additional information is needed</li>
+              <li>Approve or reject the registration request</li>
+              <li>Send welcome email if approved</li>
+            </ul>
+          </div>
+        </div>
+      `,
+      text: `
+New User Registration Request
+
+User Details:
+- Name: ${userData.firstName} ${userData.lastName}
+- Email: ${userData.email}
+- Role: ${userData.role}
+- Registration Date: ${new Date().toLocaleDateString()}
+
+A new user has requested to register for PATHMATCH. Please review their information and take appropriate action.
+
+Next Steps:
+- Review the user's information
+- Contact the user if additional information is needed
+- Approve or reject the registration request
+- Send welcome email if approved
+      `
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Registration email sent successfully:', result.messageId);
+    return result;
+  } catch (error) {
+    console.error('Error sending registration email:', error);
+    throw error;
+  }
+};
+
 // Generate auto-responder email content
 export const generateAutoResponderEmail = (jobTitle: string, applicantName: string, applicantEmail: string) => {
   const responsibilities = getDefaultResponsibility(jobTitle);
@@ -138,7 +204,7 @@ export const sendAutoResponderEmail = async (
 export const sendNotificationEmail = async (
   applicantName: string,
   applicantEmail: string,
-  jobTitle: string, // <-- Added here
+  jobTitle: string,
   coverLetter?: string,
   resumeFile?: Express.Multer.File
 ) => {

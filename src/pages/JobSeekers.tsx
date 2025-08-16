@@ -1,9 +1,10 @@
-import React, { useState, ChangeEvent, FormEvent, useReducer } from 'react';
+import React, { useState, ChangeEvent, FormEvent, useReducer, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import JobCard from "../components/JobCard"
 import JobDetailsModal from "../components/JobDetailsModal"
 import { motion, AnimatePresence } from 'framer-motion';
 import Footer from '../components/Footer'
+import jobsData from '../data/jobs.json';
 
 const FlipModal = ({ isOpen, onClose, children, jobTitle, companyName }) => (
   <AnimatePresence>
@@ -225,243 +226,15 @@ const JobSeekers: React.FC = () => {
   
   
 
-  const jobsData = [
-    {
-      title: "Senior Software Engineer",
-      company: "TechCorp Solutions",
-      jobType: "Full-time",
-      location: "Remote",
-      salaryRange: "$80,000 - $120,000",
-      description: "We are seeking a talented Senior Software Engineer to join our dynamic team. You will be responsible for developing scalable applications, mentoring junior developers, and contributing to architectural decisions. This role offers excellent growth opportunities and the chance to work with cutting-edge technologies.",
-      requiredSkills: ["React", "Node.js", "TypeScript", "AWS", "MongoDB"],
-      benefits: [
-        "Competitive salary and benefits package",
-        "Health, dental, and vision insurance",
-        "401(k) retirement plan with company matching",
-        "Flexible work hours",
-        "Professional development opportunities",
-        "Remote work setup allowance"
-      ],
-      postedTime: "2 days ago"
-    },
-    {
-      title: "Marketing Manager",
-      company: "Growth Dynamics",
-      jobType: "Full-time",
-      location: "Hybrid",
-      salaryRange: "$65,000 - $85,000",
-      description: "Lead our marketing initiatives and drive brand awareness. You'll develop and execute marketing strategies, manage campaigns, and analyze performance metrics to optimize results. This role offers excellent growth opportunities and the chance to work with cutting-edge marketing technologies.",
-      requiredSkills: ["Digital Marketing", "SEO", "Google Analytics", "Content Strategy"],
-      benefits: [
-        "Health insurance",
-        "Performance bonuses",
-        "Remote work options",
-        "Professional development",
-        "Team events and activities",
-        "Flexible PTO"
-      ],
-      postedTime: "1 day ago"
-    },
-    {
-    title: "Marketing Consultant",
-      company: "Growth Dynamics",
-      jobType: "Full-time",
-      location: "Remote",
-      salaryRange: "$45,000 - $75,000",
-      description: "Lead our marketing initiatives and drive brand awareness. You'll develop and execute marketing strategies, manage campaigns, and analyze performance metrics to optimize results. This role offers excellent growth opportunities and the chance to work with cutting-edge marketing technologies.",
-      requiredSkills: ["Strategic Event Planning", "SEO", "Microsoft Office", "CRM Data Analysis"],
-      benefits: [
-        "Health insurance",
-        "Performance bonuses",
-        "Remote work options",
-        "Professional development",
-        "Team events and activities",
-        "Flexible PTO"
-      ],
-      postedTime: "2 days ago"
-    },
-    {
-      title: "Customer Service Agent",
-      company: "Care Connect",
-      jobType: "Part-time",
-      location: "Remote",
-      salaryRange: "$25,000 - $70,000",
-      description: "Assist customers with product information and order support. We are seeking a talented individual to join our dynamic team and contribute to our continued success. This role offers excellent growth opportunities and the chance to work with cutting-edge customer service technologies.",
-      requiredSkills: ["Phone Support", "Email Support", "Product Knowledge", "Documentation"],
-      benefits: [
-        "Competitive salary and benefits package",
-        "Health, dental, and vision insurance",
-        "401(k) retirement plan with company matching",
-        "Flexible work arrangements",
-        "Professional development opportunities",
-        "Paid time off and holidays"
-      ],
-      postedTime: "3 hours ago"
-    },
-    {
-      title: "Data Analyst",
-      company: "Insight Analytics",
-      jobType: "Full-time",
-      location: "On-site",
-      salaryRange: "$55,000 - $75,000",
-      description: "Transform raw data into actionable insights. You'll analyze complex datasets, create reports, and provide recommendations to drive business decisions. This role offers excellent growth opportunities and the chance to work with cutting-edge analytics technologies.",
-      requiredSkills: ["SQL", "Python", "Excel", "Tableau"],
-      benefits: [
-        "Comprehensive benefits",
-        "Learning budget",
-        "Flexible PTO",
-        "Modern office",
-        "Team collaboration",
-        "Career advancement opportunities"
-      ],
-      postedTime: "1 day ago"
-    },
-    {
-      title: "UX/UI Designer",
-      company: "Creative Studios",
-      jobType: "Contract",
-      location: "Remote",
-      salaryRange: "$70,000 - $90,000",
-      description: "Create beautiful and functional user experiences. Design intuitive interfaces, conduct user research, and collaborate with development teams to bring designs to life. This role offers excellent growth opportunities and the chance to work with cutting-edge design technologies.",
-      requiredSkills: ["Figma", "Adobe Creative Suite", "User Research", "Prototyping"],
-      benefits: [
-        "Project-based bonuses",
-        "Remote work",
-        "Creative freedom",
-        "Latest tools",
-        "Portfolio building",
-        "Flexible schedule"
-      ],
-      postedTime: "5 days ago"
-    },
-    {
-      title: "Sales Representative",
-      company: "Revenue Builders",
-      jobType: "Full-time",
-      location: "Hybrid",
-      salaryRange: "$45,000 - $65,000",
-      description: "Drive revenue growth through strategic sales initiatives. Build relationships with prospects, conduct product demonstrations, and close deals. This role offers excellent growth opportunities and the chance to work with cutting-edge sales technologies.",
-      requiredSkills: ["Sales Techniques", "CRM Management", "Negotiation", "Presentation"],
-      benefits: [
-        "Commission structure",
-        "Health benefits",
-        "Sales training",
-        "Career advancement",
-        "Team incentives",
-        "Performance bonuses"
-      ],
-      postedTime: "2 days ago"
-    },
-    {
-      title: "Online Tutor EduConnect",
-      company: "Revenue Builders",
-      jobType: "Full-time",
-      location: "Remote",
-      salaryRange: "$25,000 - $70,000",
-      description: "Provide online tutoring in various subjects to students... We are seeking a talented individual to join our dynamic team and contribute to our continued success. This role offers excellent growth opportunities and the chance to work with cutting-edge technologies.",
-      requiredSkills: ["Teaching", "Subject Expertise", "Communication", "Online Tools"],
-      benefits: [
-        "Competitive salary and benefits package",
-        "Health, dental, and vision insurance",
-        "401(k) retirement plan with company matching",
-        "Flexible work arrangements",
-        "Paid time off and holidays",
-        "Professional development opportunities"
-      ],
-      postedTime: "2 days ago"
-    },
-    {
-      title: "Customer Service Team Lead",
-      company: "Service Excellence",
-      jobType: "Full-time",
-      location: "Remote",
-      salaryRange: "$25,000 - $70,000",
-      description: "Lead a team of customer service representatives and ensure quality service... We are seeking a talented individual to join our dynamic team and contribute to our continued success. This role offers excellent growth opportunities and the chance to work with cutting-edge technologies.",
-      requiredSkills: ["Leadership", "Team Management", "Customer Service", "Training"],
-      benefits: [
-        "Competitive salary and benefits package",
-        "Health, dental, and vision insurance",
-        "401(k) retirement plan with company matching",
-        "Flexible work arrangements",
-        "Paid time off and holidays",
-        "Professional development opportunities"
-      ],
-      postedTime: "2 days ago"
-    },
-    {
-      title: "Customer Service Advisor",
-      company: "Client First",
-      jobType: "Contract",
-      location: "Remote",
-      salaryRange: "$25,000 - $70,000",
-      description: "Provide expert advice and support to customers across multiple channels... We are seeking a talented individual to join our dynamic team and contribute to our continued success. This role offers excellent growth opportunities and the chance to work with cutting-edge technologies.",
-      requiredSkills: ["Advisory Skills", "Technical Support", "Cross-selling", "Customer Retention"],
-      benefits: [
-        "Competitive salary and benefits package",
-        "Health, dental, and vision insurance",
-        "401(k) retirement plan with company matching",
-        "Flexible work arrangements",
-        "Paid time off and holidays",
-        "Professional development opportunities"
-      ],
-      postedTime: "2 days ago"
-    },
-    {
-      title: "Customer Service Associate",
-      company: "Response Team",
-      jobType: "Full-time",
-      location: "Remote",
-      salaryRange: "$25,000 - $70,000",
-      description: "Handle customer complaints and provide solutions to enhance satisfaction... We are seeking a talented individual to join our dynamic team and contribute to our continued success. This role offers excellent growth opportunities and the chance to work with cutting-edge technologies.",
-      requiredSkills: ["Conflict Resolution", "Customer Relations", "Data Entry", "Follow-up"],
-      benefits: [
-        "Competitive salary and benefits package",
-        "Health, dental, and vision insurance",
-        "401(k) retirement plan with company matching",
-        "Flexible work arrangements",
-        "Paid time off and holidays",
-        "Professional development opportunities"
-      ],
-      postedTime: "2 days ago"
-    },
-    {
-      title: "Customer Service Coordinator",
-      company: "Support Hub",
-      jobType: "Full-time",
-      location: "Remote",
-      salaryRange: "$25,000 - $70,000",
-      description: "Coordinate customer service activities and maintain service quality standards... We are seeking a talented individual to join our dynamic team and contribute to our continued success. This role offers excellent growth opportunities and the chance to work with cutting-edge technologies.",
-      requiredSkills: ["Coordination", "Quality Assurance", "Process Improvement", "Reporting"],
-      benefits: [
-        "Competitive salary and benefits package",
-        "Health, dental, and vision insurance",
-        "401(k) retirement plan with company matching",
-        "Flexible work arrangements",
-        "Paid time off and holidays",
-        "Professional development opportunities"
-      ],
-      postedTime: "2 days ago"
-    },
-    {
-      title: "Customer Service Consultant",
-      company: "Expert Support",
-      jobType: "Full-time",
-      location: "Remote",
-      salaryRange: "$25,000 - $70,000",
-      description: "Provide specialized customer support and consultation services... We are seeking a talented individual to join our dynamic team and contribute to our continued success. This role offers excellent growth opportunities and the chance to work with cutting-edge technologies.",
-      requiredSkills: ["Consultation", "Expert Knowledge", "Problem Analysis", "Solution Design"],
-      benefits: [
-        "Competitive salary and benefits package",
-        "Health, dental, and vision insurance",
-        "401(k) retirement plan with company matching",
-        "Flexible work arrangements",
-        "Paid time off and holidays",
-        "Professional development opportunities"
-      ],
-      postedTime: "2 days ago"
-    },
-    {
-      title: "Customer Service Manager",
+
+
+
+
+
+
+
+
+
       company: "Service Leaders",
       jobType: "Full-time",
       location: "Remote",
@@ -909,8 +682,19 @@ const JobSeekers: React.FC = () => {
               ))}
             </select>
           </div>
-          <div className="max-w-7xl mx-auto mt-4 text-gray-500 text-base">
-            Showing {state.filteredJobs.length} jobs
+          <div className="max-w-7xl mx-auto mt-4 flex justify-between items-center">
+            <div className="text-gray-500 text-base">
+              Showing {state.filteredJobs.length} jobs
+            </div>
+            <Link
+              to="/add-job"
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Add Job
+            </Link>
           </div>
         </div>
 

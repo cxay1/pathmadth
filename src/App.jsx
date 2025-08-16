@@ -14,6 +14,7 @@ import Jobseekers from "./pages/JobSeekers"
 import Employers from './pages/Employers'
 import ContactUs from './pages/ContactUs'
 import Auth from './pages/Auth';
+import AddJob from './pages/AddJob';
 
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/job-seekers" element={<Jobseekers />} />
           <Route path="/employer" element={<Employers />} /> 
+          <Route path="/add-job" element={<AddJob />} />
           <Route path="/upload" element={ <Upload />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/about-us" element={<About />} />

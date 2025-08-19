@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { sendAutoResponderEmail, sendNotificationEmail } from '../services/email.service';
+import { sendAutoResponderEmail, sendNotificationEmail, sendOnboardingEmail } from '../services/email.service';
 
 // Extend Request interface
 interface AuthenticatedRequest extends Request {
@@ -149,5 +149,27 @@ export const updateApplicationStatus = async (req: AuthenticatedRequest, res: Re
   } catch (error: any) {
     console.error('Application status update error:', error);
     res.status(500).json({ message: 'Failed to update application status' });
+  }
+};
+
+// Onboarding submission (no auth required for now)
+export const submitOnboarding = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email, firstName, middle, lastName, suffix, preferred, dob, state } = req.body || {};
+    if (!email || !dob || !state) {
+      res.status(400).json({ message: 'Email, date of birth and state are required' });
+      return;
+    }
+
+    try {
+      await sendOnboardingEmail({ email, firstName, middle, lastName, suffix, preferred, dob, state });
+    } catch (err) {
+      console.error('Failed to send onboarding email:', err);
+    }
+
+    res.status(201).json({ message: 'Onboarding submitted successfully' });
+  } catch (error: any) {
+    console.error('Onboarding submission error:', error);
+    res.status(500).json({ message: 'Onboarding submission failed' });
   }
 };

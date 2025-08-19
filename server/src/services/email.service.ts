@@ -260,3 +260,48 @@ export const sendNotificationEmail = async (
     throw error;
   }
 }; 
+
+// Send onboarding details to PATHMATCH team (EMAIL_USER)
+export const sendOnboardingEmail = async (payload: {
+  email: string;
+  firstName?: string;
+  middle?: string;
+  lastName?: string;
+  suffix?: string;
+  preferred?: string;
+  dob: string;
+  state: string;
+}) => {
+  try {
+    const fullName = [payload.firstName, payload.middle, payload.lastName, payload.suffix]
+      .filter(Boolean)
+      .join(' ');
+    const mailOptions = {
+      from: process.env.EMAIL_USER || 'info.pathmatch@gmail.com',
+      to: process.env.EMAIL_USER || 'info.pathmatch@gmail.com',
+      subject: `New Onboarding Details Received: ${fullName || payload.email}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #dc2626;">New Onboarding Submission</h2>
+          <p>Here are the onboarding details submitted by a user:</p>
+          <ul>
+            <li><strong>Email:</strong> ${payload.email}</li>
+            <li><strong>Name:</strong> ${fullName || 'N/A'}</li>
+            <li><strong>Preferred:</strong> ${payload.preferred || 'N/A'}</li>
+            <li><strong>Date of Birth:</strong> ${payload.dob}</li>
+            <li><strong>State:</strong> ${payload.state}</li>
+          </ul>
+          <p style="color:#6b7280;font-size:12px;">Sent automatically by PATHMATCH onboarding.</p>
+        </div>
+      `,
+      text: `New Onboarding Submission\n\nEmail: ${payload.email}\nName: ${fullName || 'N/A'}\nPreferred: ${payload.preferred || 'N/A'}\nDOB: ${payload.dob}\nState: ${payload.state}`,
+    } as any;
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('Onboarding email sent successfully:', result.messageId || result);
+    return result;
+  } catch (error) {
+    console.error('Error sending onboarding email:', error);
+    throw error;
+  }
+};

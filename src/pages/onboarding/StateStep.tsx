@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:5000';
 
 const states = [
   'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'
@@ -9,11 +10,34 @@ const StateStep: React.FC = () => {
   const navigate = useNavigate();
   const [state, setState] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!state) return;
     localStorage.setItem('onboarding.state', state);
-    navigate('/')
+
+    try {
+      const nameRaw = localStorage.getItem('onboarding.name');
+      const name = nameRaw ? JSON.parse(nameRaw) : {};
+      const dob = localStorage.getItem('onboarding.dob') || '';
+      const email = localStorage.getItem('token') ? JSON.parse(atob(localStorage.getItem('token')!)).email : '';
+      await fetch(`${API_BASE_URL}/api/applications/onboarding`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          firstName: name.first || '',
+          middle: name.middle || '',
+          lastName: name.last || '',
+          suffix: name.suffix || '',
+          preferred: name.preferred || '',
+          dob,
+          state
+        })
+      });
+    } catch (err) {
+      console.error('Failed to submit onboarding details', err);
+    }
+    navigate('/');
   };
 
   return (

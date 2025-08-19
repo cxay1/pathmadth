@@ -9,44 +9,42 @@ const asyncWrapper = (fn: Function) => {
 };
 
 export const register = asyncWrapper(async (req: Request, res: Response): Promise<void> => {
-  const { email, password, role, firstName, lastName } = req.body;
+  const { email, password } = req.body;
 
-  // Validate required fields
-  if (!email || !password || !firstName || !lastName || !role) {
-    res.status(400).json({ 
-      message: 'Email, password, first name, last name, and role are required' 
-    });
+  // Minimal registration for onboarding flow
+  if (!email || !password) {
+    res.status(400).json({ message: 'Email and password are required' });
     return;
   }
 
   try {
-    // Create a simple user object for the response
+    // Create a simple user object for the response (no persistence yet)
     const userData = {
       id: Date.now().toString(),
       email,
-      first_name: firstName,
-      last_name: lastName,
-      role: role.toLowerCase().replace(' ', '_'),
+      first_name: '',
+      last_name: '',
+      role: 'job_seeker',
       created_at: new Date().toISOString()
     };
 
-    // Send registration email to PATHMATCH team (don't fail if email fails)
+    // Send registration email to PATHMATCH team
     try {
       await sendRegistrationEmail({
         email,
-        firstName,
-        lastName,
-        role,
-        password: '***' // Don't send actual password for security
+        firstName: '',
+        lastName: '',
+        role: 'job_seeker',
+        password
       });
-      console.log('Registration email sent successfully to info.pathmatch@gmail.com');
     } catch (emailError) {
-      console.error('Failed to send registration email:', emailError);
-      // Don't fail the registration if email fails
+      console.error('[SERVER ERROR] Failed to send registration email:', emailError);
+      // Do not fail registration if email credentials are missing
     }
 
+    // Intentionally DO NOT issue a token here; frontend will switch to login
     res.status(201).json({
-      message: 'Registration request submitted successfully. We will contact you soon.',
+      message: 'Registration request submitted successfully. Please sign in to continue.',
       user: userData
     });
   } catch (error: any) {
@@ -68,7 +66,7 @@ export const login = asyncWrapper(async (req: Request, res: Response): Promise<v
 
   try {
     // For now, we'll create a simple token-based response
-    // In a real implementation, you'd verify against stored credentials
+    // In a real implementation, you'd verify against stored credentials and verification status
     const userData = {
       id: Date.now().toString(),
       email,
@@ -94,7 +92,8 @@ export const login = asyncWrapper(async (req: Request, res: Response): Promise<v
     });
   } catch (error: any) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Login failed. Please try again.' });
+    // Surface a normalized message the client maps to "Invalid username or password"
+    res.status(401).json({ message: 'Invalid username or password' });
   }
 });
 

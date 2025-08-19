@@ -5,14 +5,19 @@ dotenv.config();
 
 const username = process.env.EMAIL_USER;
 const password = process.env.EMAIL_PASSWORD;
+const emailEnabled = Boolean(username && password);
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail', // or your preferred email service
-  auth: {
-    user: process.env.EMAIL_USER || username,
-    pass: process.env.EMAIL_PASSWORD || password,
-  },
-});
+// Use real SMTP when credentials are provided; otherwise fall back to a safe
+// JSON transport to avoid runtime failures in development.
+const transporter = emailEnabled
+  ? nodemailer.createTransport({
+      service: process.env.EMAIL_SERVICE || 'gmail',
+      auth: {
+        user: username,
+        pass: password,
+      },
+    })
+  : nodemailer.createTransport({ jsonTransport: true });
 
 // Role-specific responsibilities mapping
 const roleResponsibilities: { [key: string]: string } = {

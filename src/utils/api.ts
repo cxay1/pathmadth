@@ -65,9 +65,10 @@ export const authApi = {
   register: async (userData: {
     email: string;
     password: string;
-    firstName: string;
-    lastName: string;
-    role: string;
+    // Optional fields that may be provided later during onboarding
+    firstName?: string;
+    lastName?: string;
+    role?: string;
   }) => {
     return apiRequest('/api/auth/register', {
       method: 'POST',

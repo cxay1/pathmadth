@@ -17,6 +17,7 @@ import Auth from './pages/Auth';
 import NameStep from './pages/onboarding/NameStep';
 import BirthdayStep from './pages/onboarding/BirthdayStep';
 import StateStep from './pages/onboarding/StateStep';
+import AddJob from './pages/AddJob';
 
 
 function App() {
@@ -49,6 +50,12 @@ function App() {
           <Route path="/onboarding/state" element={
             <ProtectedRoute>
               <StateStep />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/jobs/new" element={
+            <ProtectedRoute requiredRole="employer">
+              <AddJob />
             </ProtectedRoute>
           } />
           

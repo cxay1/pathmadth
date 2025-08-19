@@ -1,0 +1,46 @@
+[
+  {
+    "id": "1",
+    "title": "Senior Software Engineer",
+    "company": "TechCorp Solutions",
+    "jobType": "Full-time",
+    "location": "Remote",
+    "salaryRange": "$80,000 - $120,000",
+    "description": "We are seeking a talented Senior Software Engineer to join our dynamic team. You will be responsible for developing scalable applications, mentoring junior developers, and contributing to architectural decisions. This role offers excellent growth opportunities and the chance to work with cutting-edge technologies.",
+    "requiredSkills": ["React", "Node.js", "TypeScript", "AWS", "MongoDB"],
+    "benefits": [
+      "Competitive salary and benefits package",
+      "Health, dental, and vision insurance",
+      "401(k) retirement plan with company matching",
+      "Flexible work hours",
+      "Professional development opportunities",
+      "Remote work setup allowance"
+    ],
+    "postedTime": "2 days ago",
+    "employer_id": "employer-1",
+    "status": "active",
+    "created_at": "2024-01-15T10:00:00Z"
+  },
+  {
+    "id": "2",
+    "title": "Marketing Manager",
+    "company": "Growth Dynamics",
+    "jobType": "Full-time",
+    "location": "Hybrid",
+    "salaryRange": "$65,000 - $85,000",
+    "description": "Lead our marketing initiatives and drive brand awareness. You'll develop and execute marketing strategies, manage campaigns, and analyze performance metrics to optimize results.",
+    "requiredSkills": ["Digital Marketing", "SEO", "Google Analytics", "Content Strategy"],
+    "benefits": [
+      "Health insurance",
+      "Performance bonuses",
+      "Remote work options",
+      "Professional development",
+      "Team events and activities",
+      "Flexible PTO"
+    ],
+    "postedTime": "1 day ago",
+    "employer_id": "employer-2",
+    "status": "active",
+    "created_at": "2024-02-01T09:00:00Z"
+  }
+]

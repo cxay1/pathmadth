@@ -82,7 +82,7 @@ const Auth: React.FC = () => {
           password: form.password,
         });
 
-        const token = data.access_token || btoa(JSON.stringify({
+        const token = data.access_token || btoa(unescape(encodeURIComponent(JSON.stringify({
           userId: data.user?.id || '12345',
           email: data.user?.email || form.email,
           firstName: data.user?.first_name || 'User',
@@ -90,7 +90,7 @@ const Auth: React.FC = () => {
           role: data.user?.role || 'job_seeker',
           exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60),
           iat: Math.floor(Date.now() / 1000)
-        }));
+        })));
 
         login(token);
         navigate('/onboarding/name');

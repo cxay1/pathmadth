@@ -23,8 +23,8 @@ function App() {
   const location = useLocation();
   return (
     <>
-      {location.pathname !== '/auth' && <AnimatedLogo />}
       <AuthProvider>
+        {location.pathname !== '/auth' && <AnimatedLogo />}
         <ScrollToTop />
         <Routes>
           <Route path="/" element={<Home />} />

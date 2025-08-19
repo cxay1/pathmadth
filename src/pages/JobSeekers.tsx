@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import JobCard from "../components/JobCard";
 import JobDetailsModal from "../components/JobDetailsModal";
 import { AnimatePresence, motion } from 'framer-motion';
+import { applicationsApi } from '../utils/api';
 import Footer from '../components/Footer';
 import jobsData from '../data/jobs.json';
 
@@ -155,16 +156,14 @@ const JobSeekers: React.FC = () => {
       formData.append('phone', form.phone || '');
       if (form.resume) formData.append('resume', form.resume);
 
-      const response = await fetch('/api/applications/public', { method: 'POST', body: formData });
+      // Submit via API helper
+      await applicationsApi.submitPublic(formData);
 
-      if (response.ok) {
+      {
         setShowSuccessMessage(true);
         setForm({ name: '', phone: '', email: '', message: '', resume: null });
         setAttachments([]);
         setTimeout(() => { setShowSuccessMessage(false); setIsModalOpen(false); }, 3000);
-      } else {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error occurred' }));
-        alert(`Error submitting application: ${errorData.message}`);
       }
     } catch (error) {
       console.error('Error submitting application:', error);
@@ -281,11 +280,13 @@ const JobSeekers: React.FC = () => {
 
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+            <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto" initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.08 } } }}>
               {state.visibleJobs.map((job: any, index: number) => (
-                <JobCard key={index} title={job.title} company={job.company} jobType={job.jobType} location={job.location} salaryRange={job.salaryRange} description={job.description} requiredSkills={job.requiredSkills} postedTime={job.postedTime} onApply={() => { setSelectedJob(job); setIsModalOpen(true); }} onViewDetails={() => handleViewDetails(job)} />
+                <motion.div key={index} variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}>
+                  <JobCard title={job.title} company={job.company} jobType={job.jobType} location={job.location} salaryRange={job.salaryRange} description={job.description} requiredSkills={job.requiredSkills} postedTime={job.postedTime} onApply={() => { setSelectedJob(job); setIsModalOpen(true); }} onViewDetails={() => handleViewDetails(job)} />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
             {state.visibleJobs.length < state.filteredJobs.length && (
               <div className="text-center mt-12">
                 <button className="bg-red-600 hover:bg-red-700 text-white font-semibold px-8 py-3 rounded-lg transition-colors" onClick={handleShowMore}>View More <span className="ml-2">→</span></button>

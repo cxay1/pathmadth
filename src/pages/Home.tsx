@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { people, team } from '../assets/images';
 import QuoteBanner from '../components/QuoteBanner';
+import { motion } from 'framer-motion';
 import React from 'react';
 import Footer from '../components/Footer';
 import { services, ServiceItem } from "../components/services";
@@ -52,13 +53,23 @@ const Home = () => {
         <div className="absolute inset-0 bg-red-900 bg-opacity-80 z-10" />
         {/* Content */}
         <div className="relative z-20 flex flex-col items-center justify-center w-full px-4 py-24 md:py-32">
-          <h1 className="text-4xl md:text-6xl font-extrabold text-white text-center leading-tight mb-6">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-4xl md:text-6xl font-extrabold text-white text-center leading-tight mb-6"
+          >
             Connect Top <span className="text-red-600">Talent</span> with<br className="hidden md:block" /> Leading Companies
-          </h1>
-          <p className="text-lg md:text-2xl text-white text-center max-w-2xl mb-8">
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-lg md:text-2xl text-white text-center max-w-2xl mb-8"
+          >
             Where talent meets opportunity. We deliver strategic recruitment solutions that drive career success and business performance—partnering with professionals and employers to achieve transformative outcomes.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 mb-12">
+          </motion.p>
+          <motion.div className="flex flex-col sm:flex-row gap-4 mb-12" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
         <Link
           to="/job-seekers"
               className="bg-red-500  hover:bgt-red-600 text-white font-bold px-8 py-4 rounded-lg shadow transition-colors text-lg flex items-center justify-center"
@@ -71,7 +82,7 @@ const Home = () => {
             >
               Hire Top Talent
         </Link>
-          </div>
+          </motion.div>
           {/* Stats Row */}
           <div className="flex flex-col md:flex-row gap-8 md:gap-16 mt-8 w-full max-w-3xl justify-center">
             <StatCard

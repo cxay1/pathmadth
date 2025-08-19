@@ -99,3 +99,13 @@ export const authApi = {
     });
   },
 };
+
+// Applications API
+export const applicationsApi = {
+  // Public application submission (multipart/form-data)
+  submitPublic: async (formData: FormData) => {
+    return apiClient.post('/api/applications/public', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then(r => r.data);
+  },
+};

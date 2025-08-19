@@ -79,7 +79,7 @@ const Auth: React.FC = () => {
           iat: Math.floor(Date.now() / 1000)
         }))));
 
-        login(token);
+        await login(token);
         navigate('/onboarding/name');
       }
     } catch (error) {

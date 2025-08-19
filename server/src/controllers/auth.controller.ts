@@ -38,7 +38,8 @@ export const register = asyncWrapper(async (req: Request, res: Response): Promis
         password
       });
     } catch (emailError) {
-      console.error('Failed to send registration email:', emailError);
+      console.error('[SERVER ERROR] Failed to send registration email:', emailError);
+      // Do not fail registration if email credentials are missing
     }
 
     // Intentionally DO NOT issue a token here; frontend will switch to login

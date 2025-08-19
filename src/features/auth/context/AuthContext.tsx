@@ -31,6 +31,8 @@ const removeStoredToken = (): void => {
   try { localStorage.removeItem('token'); } catch {}
 };
 
+const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:5000';
+
 // Tolerant payload decode: supports base64 JSON or JWT
 const decodePayload = (token: string): any | null => {
   try {
@@ -83,10 +85,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserProfile = async (token: string): Promise<UserProfile | null> => {
     try {
-      const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(`${API_BASE_URL}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) return null;
       const body = await res.json();
-      const u = body.user || body; // controller returns { user }
+      const u = body.user || body;
       return {
         id: u.id,
         userId: u.user_id || u.userId,
@@ -118,7 +120,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAuthenticated(true);
       return;
     }
-    // Fallback to payload
     if (payload) {
       setUser({
         id: payload.userId || payload.sub,

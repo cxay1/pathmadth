@@ -14,6 +14,9 @@ import Jobseekers from "./pages/JobSeekers"
 import Employers from './pages/Employers'
 import ContactUs from './pages/ContactUs'
 import Auth from './pages/Auth';
+import NameStep from './pages/onboarding/NameStep';
+import BirthdayStep from './pages/onboarding/BirthdayStep';
+import StateStep from './pages/onboarding/StateStep';
 
 
 function App() {
@@ -32,6 +35,22 @@ function App() {
           <Route path="/about-us" element={<About />} />
           <Route path="/contact-us" element={<ContactUs />} />
           <Route path="/auth" element={<Auth />} />
+          
+          <Route path="/onboarding/name" element={
+            <ProtectedRoute>
+              <NameStep />
+            </ProtectedRoute>
+          } />
+          <Route path="/onboarding/dob" element={
+            <ProtectedRoute>
+              <BirthdayStep />
+            </ProtectedRoute>
+          } />
+          <Route path="/onboarding/state" element={
+            <ProtectedRoute>
+              <StateStep />
+            </ProtectedRoute>
+          } />
           
           <Route path="/video/:id" element={
             <ProtectedRoute>

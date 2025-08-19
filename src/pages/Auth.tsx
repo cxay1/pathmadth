@@ -18,28 +18,31 @@ const Auth: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    if (error) setError(''); // Clear error when user types
+    if (error) setError('');
+    if (successMessage) setSuccessMessage('');
   };
 
   const handleTab = (tab: 'login' | 'register') => {
     setTab(tab);
-    setError(''); // Clear error when switching tabs
+    setError('');
+    setSuccessMessage('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setSuccessMessage('');
 
     try {
       if (tab === 'register') {
-        // Validation for registration
         if (form.password !== form.confirmPassword) {
           setError('Passwords do not match');
           setIsLoading(false);
@@ -56,7 +59,6 @@ const Auth: React.FC = () => {
           return;
         }
 
-        // Make API call to register endpoint
         const data = await authApi.register({
           email: form.email,
           password: form.password,
@@ -64,28 +66,22 @@ const Auth: React.FC = () => {
           lastName: form.lastName,
           role: role.toLowerCase().replace(' ', '_'),
         });
-        
-        // Create a simple token for the registered user
-        const token = btoa(JSON.stringify({
-          userId: data.user?.id || Date.now().toString(),
-          email: form.email,
-          firstName: form.firstName,
-          lastName: form.lastName,
-          role: data.user?.role || role.toLowerCase().replace(' ', '_'),
-          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours from now
-          iat: Math.floor(Date.now() / 1000)
-        }));
 
-        login(token);
-        navigate('/');
+        setSuccessMessage('Account created successfully. Please sign in to continue.');
+        setTab('login');
+        setForm({
+          firstName: '',
+          lastName: '',
+          email: form.email,
+          password: '',
+          confirmPassword: '',
+        });
       } else {
-        // Make API call to login endpoint
         const data = await authApi.login({
           email: form.email,
           password: form.password,
         });
-        
-        // Use the token from the server or create a fallback
+
         const token = data.access_token || btoa(JSON.stringify({
           userId: data.user?.id || '12345',
           email: data.user?.email || form.email,
@@ -97,7 +93,7 @@ const Auth: React.FC = () => {
         }));
 
         login(token);
-        navigate('/');
+        navigate('/onboarding/name');
       }
     } catch (error) {
       console.error('Authentication error:', error);
@@ -150,6 +146,11 @@ const Auth: React.FC = () => {
         {error && (
           <div className="w-full mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-600 text-sm text-center">{error}</p>
+          </div>
+        )}
+        {successMessage && (
+          <div className="w-full mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-green-700 text-sm text-center">{successMessage}</p>
           </div>
         )}
         
@@ -298,4 +299,4 @@ const Auth: React.FC = () => {
   );
 };
 
-export default Auth; 
+export default Auth;

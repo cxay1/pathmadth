@@ -33,33 +33,13 @@ export const submitPublicApplication = async (req: Request, res: Response): Prom
       status: 'submitted'
     };
 
-    console.log('Public application received:', applicationData);
+    console.log('[SERVER] Public application received:', applicationData);
 
-    // Send auto-responder email to applicant
-    try {
-      await sendAutoResponderEmail(
-        applicant_email,
-        applicant_name,
-        job_title
-      );
-    } catch (emailError) {
-      console.error('Failed to send auto-responder email:', emailError);
-      // Don't fail the application submission if email fails
-    }
-
-    // Send notification email to PATHMATCH team
-    try {
-      await sendNotificationEmail(
-        applicant_name,
-        applicant_email,
-        job_title,
-        cover_letter,
-        resumeFile
-      );
-    } catch (emailError) {
-      console.error('Failed to send notification email:', emailError);
-      // Don't fail the application submission if email fails
-    }
+    // Send emails in parallel; log but do not fail the submission
+    await Promise.all([
+      sendAutoResponderEmail(applicant_email, applicant_name, job_title).catch((e) => console.error('[SERVER] Auto-responder failed:', e)),
+      sendNotificationEmail(applicant_name, applicant_email, job_title, cover_letter, resumeFile).catch((e) => console.error('[SERVER] Notification email failed:', e))
+    ]);
 
     res.status(201).json({
       message: 'Application submitted successfully. Check your email for confirmation.',
@@ -94,30 +74,10 @@ export const submitApplication = async (req: AuthenticatedRequest, res: Response
       status: 'submitted'
     };
 
-    // Send auto-responder email to applicant
-    try {
-      await sendAutoResponderEmail(
-        applicant_email,
-        applicant_name,
-        job_title
-      );
-    } catch (emailError) {
-      console.error('Failed to send auto-responder email:', emailError);
-      // Don't fail the application submission if email fails
-    }
-
-    // Send notification email to PATHMATCH team
-    try {
-      await sendNotificationEmail(
-        applicant_name,
-        applicant_email,
-        job_title,
-        cover_letter
-      );
-    } catch (emailError) {
-      console.error('Failed to send notification email:', emailError);
-      // Don't fail the application submission if email fails
-    }
+    await Promise.all([
+      sendAutoResponderEmail(applicant_email, applicant_name, job_title).catch((e) => console.error('[SERVER] Auto-responder failed:', e)),
+      sendNotificationEmail(applicant_name, applicant_email, job_title, cover_letter).catch((e) => console.error('[SERVER] Notification email failed:', e))
+    ]);
 
     res.status(201).json({
       ...applicationData,

@@ -5,19 +5,32 @@ dotenv.config();
 
 const username = process.env.EMAIL_USER;
 const password = process.env.EMAIL_PASSWORD;
-const emailEnabled = Boolean(username && password);
+const host = process.env.EMAIL_HOST;
+const port = process.env.EMAIL_PORT ? Number(process.env.EMAIL_PORT) : undefined;
+const secure = process.env.EMAIL_SECURE === 'true';
 
-// Use real SMTP when credentials are provided; otherwise fall back to a safe
-// JSON transport to avoid runtime failures in development.
-const transporter = emailEnabled
-  ? nodemailer.createTransport({
-      service: process.env.EMAIL_SERVICE || 'gmail',
-      auth: {
-        user: username,
-        pass: password,
-      },
-    })
-  : nodemailer.createTransport({ jsonTransport: true });
+export const EMAIL_ENABLED = Boolean(username && password);
+
+// Prefer host/port if provided; otherwise use "service"; otherwise JSON transport (dev)
+let transporter: nodemailer.Transporter;
+if (EMAIL_ENABLED && host && port) {
+  transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    auth: { user: username, pass: password },
+  });
+  console.log(`[EMAIL] SMTP enabled via host ${host}:${port} (secure=${secure})`);
+} else if (EMAIL_ENABLED) {
+  transporter = nodemailer.createTransport({
+    service: process.env.EMAIL_SERVICE || 'gmail',
+    auth: { user: username, pass: password },
+  });
+  console.log(`[EMAIL] SMTP enabled via service ${(process.env.EMAIL_SERVICE || 'gmail')}`);
+} else {
+  transporter = nodemailer.createTransport({ jsonTransport: true });
+  console.log('[EMAIL] Using jsonTransport (dev); set EMAIL_USER and EMAIL_PASSWORD to enable SMTP');
+}
 
 // Role-specific responsibilities mapping
 const roleResponsibilities: { [key: string]: string } = {
